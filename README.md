@@ -3,8 +3,8 @@
 ## Project Overview
 **CryptoTaro** is an intelligent web application that analyzes cryptocurrency market trends using artificial intelligence.  
 The project integrates **two external APIs**:
-- 🪙 **Crypto Market API** (e.g., CoinGecko, Binance, or CoinMarketCap) — provides real-time market data.  
-- 🧠 **Gemini API** — performs AI-based market analysis, generates forecasts, and offers human-readable insights.  
+-  **Crypto Market API** (e.g., CoinGecko, Binance, or CoinMarketCap) — provides real-time market data.  
+-  **Gemini API** — performs AI-based market analysis, generates forecasts, and offers human-readable insights.  
 
 The system helps users track market movements, assess risks, and make data-driven investment decisions.
 
