@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -70,6 +71,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Crypto API",
+    "DESCRIPTION": "Documentation for crypto & user API",
+    "VERSION": "1.0.0",
 }
 
 ROOT_URLCONF = 'crypto.urls'
