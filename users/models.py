@@ -18,6 +18,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("email_verified", True)
         return self.create_user(email, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -28,9 +29,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, unique=True)
     discord_id = models.CharField(max_length=50, null=True, blank=True)
     two_factor_enabled = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=False)
     verification_code = models.CharField(max_length=6, null=True, blank=True)
     code_expires_at = models.DateTimeField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
@@ -53,7 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def generate_verification_code(self):
         code = str(random.randint(100000, 999999))
         self.verification_code = code
-        self.code_expires_at = timezone.now() + timezone.timedelta(minutes=5)
+        self.code_expires_at = timezone.now() + timezone.timedelta(minutes=10)
         self.save(update_fields=["verification_code", "code_expires_at"])
         return code
 

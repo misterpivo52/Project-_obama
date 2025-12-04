@@ -34,13 +34,20 @@ class RegisterSerializer(serializers.ModelSerializer):
             country=validated_data['country'],
             phone=validated_data['phone']
         )
+        user.is_active = False
+        user.email_verified = False
+        user.save()
         return user
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'country', 'phone', 'discord_id', 'two_factor_enabled', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'discord_id']
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'country', 'phone',
+            'discord_id', 'two_factor_enabled', 'email_verified',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'discord_id', 'email_verified']
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
