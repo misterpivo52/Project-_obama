@@ -18,3 +18,4 @@ pip-delete-this-directory.txt
 .mypy_cache/
 .vscode/
 /Backend/db.sqlite3
+/Backend/.env
