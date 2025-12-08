@@ -1,7 +1,5 @@
 from django.db import models
 
-from django.db import models
-
 
 class CryptoAsset(models.Model):
     symbol = models.CharField(max_length=20, unique=True)
