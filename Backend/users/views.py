@@ -4,8 +4,10 @@ from rest_framework import status
 from django.contrib.auth.models import User
 
 from api.models import CryptoAsset
-from .models import UserProfile, UserCryptoAsset
-from .serializers import (
+from api.cmc.services import fetch_and_save_full
+from api.cmc.binance_ws import build_ws_url
+from users.models import UserProfile, UserCryptoAsset
+from users.serializers import (
     UserCryptoAssetSerializer,
     UserPortfolioUpdateSerializer,
     UserProfileSerializer,
@@ -77,3 +79,34 @@ class SetFavoriteCryptoView(APIView):
         profile.save()
 
         return Response({"favorite": crypto.symbol})
+
+
+class SetDashboardCryptoView(APIView):
+    def post(self, request):
+        user = request.user
+        symbol = str(request.data.get("symbol", "")).upper().strip()
+        if not symbol:
+            return Response({"error": "Symbol is required"}, status=400)
+
+        crypto, _ = CryptoAsset.objects.get_or_create(
+            symbol=symbol,
+            defaults={"name": symbol},
+        )
+        try:
+            fetch_and_save_full(symbol)
+        except Exception as exc:
+            return Response({"error": f"Failed to fetch data for {symbol}: {exc}"}, status=400)
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.favorite_crypto = crypto
+        profile.save()
+
+        ws_url = build_ws_url(symbol + "USDT", "ticker")
+
+        return Response(
+            {
+                "symbol": symbol,
+                "binance_ws_url": ws_url,
+                "message": f"{symbol} pinned to dashboard",
+            }
+        )
