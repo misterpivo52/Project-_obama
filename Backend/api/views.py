@@ -1,18 +1,17 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 
-from .serializers import CryptoPriceSerializer
-from .models import CryptoAsset, CryptoPrice
-from .services import save_cmc_data
-from .cmc_client import get_cmc_data
+from api.models import CryptoAsset
+from api.serializers import CryptoPriceSerializer
+from api.cmc.dashboard_service import get_last_points, serialize_for_rest
+from api.cmc.services import fetch_and_save_full
 
 
 class CurrentPriceView(APIView):
     def get(self, request, symbol):
         try:
-            cmc_data = get_cmc_data(symbol)
-            price_obj = save_cmc_data(symbol, cmc_data)
+            price_obj = fetch_and_save_full(symbol)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -24,11 +23,8 @@ class PriceHistoryView(APIView):
         limit = int(request.GET.get("limit", 100))
 
         try:
-            asset = CryptoAsset.objects.get(symbol=symbol.upper())
+            points = get_last_points(symbol, limit=limit)
         except CryptoAsset.DoesNotExist:
             return Response({"error": "Unknown asset"}, status=404)
 
-        qs = CryptoPrice.objects.filter(asset=asset).order_by("-timestamp")[:limit]
-        data = CryptoPriceSerializer(qs[::-1], many=True).data
-
-        return Response(data)
+        return Response(serialize_for_rest(points))
