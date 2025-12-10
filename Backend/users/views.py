@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 
 from api.models import CryptoAsset
 from api.cmc.services import fetch_and_save_full
-from api.cmc.binance_ws import build_ws_url
 from users.models import UserProfile, UserCryptoAsset
 from users.serializers import (
     UserCryptoAssetSerializer,
@@ -101,12 +100,9 @@ class SetDashboardCryptoView(APIView):
         profile.favorite_crypto = crypto
         profile.save()
 
-        ws_url = build_ws_url(symbol + "USDT", "ticker")
-
         return Response(
             {
                 "symbol": symbol,
-                "binance_ws_url": ws_url,
                 "message": f"{symbol} pinned to dashboard",
             }
         )
