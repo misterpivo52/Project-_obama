@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, UserProfile, UserCryptoAsset
 import re
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -52,3 +52,32 @@ class UserSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    favorite_crypto_symbol = serializers.CharField(
+        source="favorite_crypto.symbol",
+        read_only=True,
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = ["favorite_crypto", "favorite_crypto_symbol"]
+
+
+class UserCryptoAssetSerializer(serializers.ModelSerializer):
+    crypto_symbol = serializers.CharField(source="crypto.symbol", read_only=True)
+    crypto_name = serializers.CharField(source="crypto.name", read_only=True)
+
+    class Meta:
+        model = UserCryptoAsset
+        fields = ["id", "crypto", "crypto_symbol", "crypto_name", "amount"]
+
+
+class UserPortfolioUpdateSerializer(serializers.ModelSerializer):
+    crypto = serializers.IntegerField()
+    amount = serializers.DecimalField(max_digits=20, decimal_places=8)
+
+    class Meta:
+        model = UserCryptoAsset
+        fields = ["crypto", "amount"]

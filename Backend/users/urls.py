@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import views
+from users import views
 
 
 urlpatterns = [
@@ -15,9 +15,9 @@ urlpatterns = [
     path('unlink-discord/', views.unlink_discord),
     path('request-password-reset/', views.request_password_reset),
     path('confirm-password-reset/', views.confirm_password_reset),
-    path("portfolio/", UserPortfolioView.as_view()),
-    path("portfolio/add/", AddCryptoToPortfolioView.as_view()),
-    path("portfolio/remove/", RemoveCryptoFromPortfolioView.as_view()),
-    path("favorite/", SetFavoriteCryptoView.as_view()),
-    path("dashboard/symbol/", SetDashboardCryptoView.as_view()),
+    path("portfolio/", views.UserPortfolioView.as_view()),
+    path("portfolio/add/", views.AddCryptoToPortfolioView.as_view()),
+    path("portfolio/remove/", views.RemoveCryptoFromPortfolioView.as_view()),
+    path("favorite/", views.SetFavoriteCryptoView.as_view()),
+    path("dashboard/symbol/", views.SetDashboardCryptoView.as_view()),
 ]

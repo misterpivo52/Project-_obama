@@ -1,7 +1,9 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
+from api.models import CryptoAsset
 import random
 
 class UserManager(BaseUserManager):
@@ -50,7 +52,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         return {"refresh": str(refresh), "access": str(refresh.access_token)}
 
     def invalidate_tokens(self):
-        pass
+        try:
+            RefreshToken.for_user(self).blacklist()
+        except Exception:
+            return None
+        return None
 
     def generate_verification_code(self):
         code = str(random.randint(100000, 999999))
@@ -74,3 +80,49 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.set_password(new_pass)
         self.save()
         return new_pass
+
+    @staticmethod
+    def refresh_access_token(refresh_token):
+        try:
+            refresh = RefreshToken(refresh_token)
+            return {"refresh": str(refresh), "access": str(refresh.access_token)}
+        except Exception:
+            return {"error": "Invalid refresh token"}
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        related_name="profile",
+        on_delete=models.CASCADE,
+    )
+    favorite_crypto = models.ForeignKey(
+        CryptoAsset,
+        related_name="favorite_of",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    def __str__(self):
+        return f"Profile({self.user.email})"
+
+
+class UserCryptoAsset(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="portfolio",
+        on_delete=models.CASCADE,
+    )
+    crypto = models.ForeignKey(
+        CryptoAsset,
+        related_name="holders",
+        on_delete=models.CASCADE,
+    )
+    amount = models.DecimalField(max_digits=20, decimal_places=8)
+
+    class Meta:
+        unique_together = ("user", "crypto")
+
+    def __str__(self):
+        return f"{self.user.email} - {self.crypto.symbol}: {self.amount}"

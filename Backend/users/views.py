@@ -2,21 +2,19 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from django.conf import settings
-from django.shortcuts import redirect
-from .models import User
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 import requests
 import json
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth.models import User
+
 from api.models import CryptoAsset
 from api.cmc.services import fetch_and_save_full
-from users.models import UserProfile, UserCryptoAsset
+from users.models import User, UserProfile, UserCryptoAsset
 from users.serializers import (
+    RegisterSerializer,
+    LoginSerializer,
+    UserSerializer,
     UserCryptoAssetSerializer,
     UserPortfolioUpdateSerializer,
     UserProfileSerializer,
@@ -383,4 +381,3 @@ class SetDashboardCryptoView(APIView):
                 "message": f"{symbol} pinned to dashboard",
             }
         )
-
