@@ -1,5 +1,6 @@
 from django.urls import path
-from . import views
+from .views import views
+
 
 urlpatterns = [
     path('register/', views.register),
@@ -14,4 +15,9 @@ urlpatterns = [
     path('unlink-discord/', views.unlink_discord),
     path('request-password-reset/', views.request_password_reset),
     path('confirm-password-reset/', views.confirm_password_reset),
+    path("portfolio/", UserPortfolioView.as_view()),
+    path("portfolio/add/", AddCryptoToPortfolioView.as_view()),
+    path("portfolio/remove/", RemoveCryptoFromPortfolioView.as_view()),
+    path("favorite/", SetFavoriteCryptoView.as_view()),
+    path("dashboard/symbol/", SetDashboardCryptoView.as_view()),
 ]
