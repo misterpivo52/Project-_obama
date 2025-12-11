@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In / Register</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            max-width: 1100px;
+            position: relative;
+        }
+
+        .language-switcher {
+            position: absolute;
+            top: -60px;
+            right: 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid royalblue;
+            background: white;
+            color: royalblue;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background: royalblue;
+            color: white;
+        }
+
+        .lang-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+
+        .form-container.hidden {
+            display: none;
+        }
+
+        .title {
+            font-size: 28px;
+            color: royalblue;
+            font-weight: 600;
+            letter-spacing: -1px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding-left: 30px;
+        }
+
+        .title::before, .title::after {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            left: 0px;
+            background-color: royalblue;
+        }
+
+        .title::before {
+            width: 18px;
+            height: 18px;
+            background-color: royalblue;
+        }
+
+        .title::after {
+            width: 18px;
+            height: 18px;
+            animation: pulse 1s linear infinite;
+        }
+
+        .message, .link-text {
+            color: rgba(88, 87, 87, 0.822);
+            font-size: 14px;
+        }
+
+        .link-text {
+            text-align: center;
+        }
+
+        .link-text a {
+            color: royalblue;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .link-text a:hover {
+            text-decoration: underline royalblue;
+        }
+
+        .flex {
+            display: flex;
+            width: 100%;
+            gap: 6px;
+        }
+
+        .form-container label {
+            position: relative;
+        }
+
+        .form-container label .input {
+            width: 100%;
+            padding: 10px 10px 20px 10px;
+            outline: 0;
+            border: 1px solid rgba(105, 105, 105, 0.397);
+            border-radius: 10px;
+        }
+
+        .form-container label .input + span {
+            position: absolute;
+            left: 10px;
+            top: 15px;
+            color: grey;
+            font-size: 0.9em;
+            cursor: text;
+            transition: 0.3s ease;
+            pointer-events: none;
+        }
+
+        .form-container label .input:focus + span,
+        .form-container label .input:not(:placeholder-shown) + span {
+            top: 5px;
+            font-size: 0.7em;
+            opacity: 1;
+        }
+
+        .form-container label .input:valid + span {
+            top: 5px;
+            font-size: 0.7em;
+            font-weight: 600;
+            color: green;
+            opacity: 1;
+        }
+
+        .form-container select.input {
+            width: 100%;
+            padding: 10px;
+            outline: 0;
+            border: 1px solid rgba(105, 105, 105, 0.397);
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .phone-wrapper {
+            display: flex;
+            gap: 5px;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .phone-wrapper label {
+            position: relative;
+        }
+
+        .phone-wrapper select {
+            flex: 0 0 25%;
+        }
+
+        .phone-wrapper input {
+            flex: 1;
+        }
+
+        .submit {
+            border: none;
+            outline: none;
+            background-color: royalblue;
+            padding: 10px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            transition: .3s ease;
+            cursor: pointer;
+        }
+
+        .submit:hover {
+            background-color: rgb(56, 90, 194);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 12px;
+            color: rgba(88, 87, 87, 0.822);
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            font-size: 12px;
+            color: royalblue;
+            text-decoration: none;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #ff1493;
+            font-size: 11px;
+            margin-top: 5px;
+            margin-left: 10px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .thought-bubble {
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 2px solid #ff1493;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 12px;
+            color: #ff1493;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+            white-space: nowrap;
+            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.3);
+        }
+
+        .thought-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 20%;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border: 2px solid #ff1493;
+            border-top: none;
+            border-left: none;
+            border-radius: 50%;
+            transform: rotate(45deg);
+        }
+
+        .thought-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 15%;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border: 2px solid #ff1493;
+            border-top: none;
+            border-left: none;
+            border-radius: 50%;
+        }
+
+        .thought-bubble.show {
+            opacity: 1;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-2deg); }
+            75% { transform: translateX(-50%) rotate(2deg); }
+        }
+
+        @keyframes pulse {
+            from {
+                transform: scale(0.9);
+                opacity: 1;
+            }
+            to {
+                transform: scale(1.8);
+                opacity: 0;
+            }
+        }
+
+        .scene-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .characters-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .characters {
+            display: flex;
+            flex-direction: row;
+            gap: 5px;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .characters-container {
+            position: relative;
+        }
+
+        .grass {
+            width: 370px;
+            height: 50px;
+            background: linear-gradient(180deg, #7cb342 0%, #558b2f 100%);
+            border-radius: 25px 25px 0 0;
+            position: relative;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+        }
+
+        .grass::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 5%;
+            right: 5%;
+            height: 10px;
+            background: repeating-linear-gradient(90deg, #8bc34a 0px, #8bc34a 10px, transparent 10px, transparent 15px);
+        }
+
+        .character {
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            transition: transform 0.5s ease, rotate 0.5s ease;
+            transform-origin: center bottom;
+        }
+
+        .character.look-login {
+            transform: translateX(-8px);
+        }
+
+        .character.look-password {
+            transform: translateX(-8px);
+        }
+
+        .character.look-away {
+            transform: rotateY(180deg) translateY(10px);
+        }
+
+        .character.writing {
+            animation: writing 0.5s ease-in-out;
+        }
+
+        .character.erasing {
+            animation: writing 0.3s ease-in-out;
+        }
+
+        @keyframes writing {
+            0%, 100% { transform: translateX(-8px) rotate(0deg); }
+            25% { transform: translateX(-8px) rotate(-2deg); }
+            75% { transform: translateX(-8px) rotate(2deg); }
+        }
+
+        .character-1 {
+            width: 200px;
+            height: 260px;
+            border-radius: 100px 100px 0 0;
+            background: linear-gradient(135deg, #ffd54f 0%, #ffb300 100%);
+        }
+
+        .character-2 {
+            width: 160px;
+            height: 200px;
+            border-radius: 80px 80px 0 0;
+            background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
+        }
+
+        .eyes {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            transition: all 0.5s ease;
+        }
+
+        .character-1 .eyes {
+            top: 30%;
+            gap: 25px;
+        }
+
+        .character-2 .eyes {
+            top: 35%;
+            gap: 20px;
+        }
+
+        .character.look-away .eyes {
+            opacity: 0;
+        }
+
+        .eye {
+            background: white;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .character-1 .eye {
+            width: 40px;
+            height: 40px;
+        }
+
+        .character-2 .eye {
+            width: 34px;
+            height: 34px;
+        }
+
+        .pupil {
+            background: #333;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .character-1 .pupil {
+            width: 18px;
+            height: 18px;
+        }
+
+        .character-2 .pupil {
+            width: 16px;
+            height: 16px;
+        }
+
+        .character-1.look-login .pupil {
+            transform: translate(calc(-50% - 10px), -50%);
+        }
+
+        .character-1.look-password .pupil {
+            transform: translate(calc(-50% - 7px), calc(-50% + 7px));
+        }
+
+        .character-1.look-firstname .pupil {
+            transform: translate(calc(-50% - 8px), calc(-50% - 2px));
+        }
+
+        .character-1.look-lastname .pupil {
+            transform: translate(calc(-50% - 9px), calc(-50% - 3px));
+        }
+
+        .character-1.look-country .pupil {
+            transform: translate(calc(-50% - 7px), calc(-50% - 1.5px));
+        }
+
+        .character-1.look-phone .pupil {
+            transform: translate(calc(-50% - 7px), calc(-50% + 1.5px));
+        }
+
+        .character-1.look-email .pupil {
+            transform: translate(calc(-50% - 8px), calc(-50% + 2px));
+        }
+
+        .character-1.look-regpassword .pupil {
+            transform: translate(calc(-50% - 9px), calc(-50% + 4px));
+        }
+
+        .character-1.look-confirmpass .pupil {
+            transform: translate(calc(-50% - 10px), calc(-50% + 5px));
+        }
+
+        .character-2.look-login .pupil {
+            transform: translate(calc(-50% - 8px), calc(-50% - 4px));
+        }
+
+        .character-2.look-password .pupil {
+            transform: translate(calc(-50% - 8px), calc(-50% + 4px));
+        }
+
+        .character-2.look-firstname .pupil {
+            transform: translate(calc(-50% - 8px), calc(-50% - 3px));
+        }
+
+        .character-2.look-lastname .pupil {
+            transform: translate(calc(-50% - 9px), calc(-50% - 3.5px));
+        }
+
+        .character-2.look-country .pupil {
+            transform: translate(calc(-50% - 7.5px), calc(-50% - 2px));
+        }
+
+        .character-2.look-phone .pupil {
+            transform: translate(calc(-50% - 7px), calc(-50% - 0.5px));
+        }
+
+        .character-2.look-email .pupil {
+            transform: translate(calc(-50% - 7px), calc(-50% + 1.5px));
+        }
+
+        .character-2.look-regpassword .pupil {
+            transform: translate(calc(-50% - 8px), calc(-50% + 3px));
+        }
+
+        .character-2.look-confirmpass .pupil {
+            transform: translate(calc(-50% - 9px), calc(-50% + 3.5px));
+        }
+
+        .notebook {
+            position: absolute;
+            top: 60%;
+            left: 55%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 45px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+
+        .character.writing .notebook {
+            opacity: 1;
+        }
+
+        .character.erasing .notebook {
+            opacity: 1;
+        }
+
+        .notebook::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            height: 2px;
+            background: repeating-linear-gradient(90deg, #aaa 0px, #aaa 8px, transparent 8px, transparent 10px);
+        }
+
+        .notebook::after {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 5px;
+            right: 5px;
+            height: 2px;
+            background: repeating-linear-gradient(90deg, #aaa 0px, #aaa 8px, transparent 8px, transparent 10px);
+        }
+
+        .notebook-line {
+            position: absolute;
+            top: 19px;
+            left: 5px;
+            right: 5px;
+            height: 2px;
+            background: repeating-linear-gradient(90deg, #aaa 0px, #aaa 8px, transparent 8px, transparent 10px);
+        }
+
+        .notebook-line2 {
+            position: absolute;
+            top: 26px;
+            left: 5px;
+            right: 5px;
+            height: 2px;
+            background: repeating-linear-gradient(90deg, #aaa 0px, #aaa 8px, transparent 8px, transparent 10px);
+        }
+
+        .pencil {
+            position: absolute;
+            top: 55%;
+            left: 40%;
+            width: 35px;
+            height: 5px;
+            background: linear-gradient(90deg, #ffd700 0%, #ffd700 70%, #ff6347 70%, #ff6347 100%);
+            transform: rotate(-45deg);
+            transform-origin: right center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 11;
+        }
+
+        .character.writing .pencil {
+            opacity: 1;
+            animation: pencilWrite 0.5s ease-in-out infinite;
+        }
+
+        @keyframes pencilWrite {
+            0%, 100% { transform: rotate(-45deg) translate(0, 0); }
+            50% { transform: rotate(-48deg) translate(-2px, 2px); }
+        }
+
+        .eraser {
+            position: absolute;
+            top: 55%;
+            left: 40%;
+            width: 20px;
+            height: 12px;
+            background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+            border-radius: 2px;
+            transform: rotate(-45deg);
+            transform-origin: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 11;
+        }
+
+        .character.erasing .eraser {
+            opacity: 1;
+            animation: eraserErase 0.3s ease-in-out infinite;
+        }
+
+        @keyframes eraserErase {
+            0%, 100% { transform: rotate(-45deg) translate(0, 0); }
+            50% { transform: rotate(-42deg) translate(-3px, 3px); }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column-reverse;
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <div class="language-switcher">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="uk">UA</button>
+    </div>
+
+    <form class="form-container" id="signinContainer">
+        <p class="title" data-translate="titleSignin">Sign In</p>
+        <p class="message" data-translate="messageSignin">Welcome back! Please login to your account.</p>
+
+        <label>
+            <input required placeholder="" type="email" class="input" id="signinEmail">
+            <span>Email</span>
+        </label>
+
+        <label>
+            <input required placeholder="" type="password" class="input" id="signinPassword">
+            <span data-translate="password">Password</span>
+        </label>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="showPassword">
+            <label for="showPassword" data-translate="showPassword">Show password</label>
+        </div>
+
+        <a href="#" class="forgot-link" data-translate="forgotPassword">Forgot Password ?</a>
+
+        <button type="submit" class="submit" data-translate="signIn">Sign In</button>
+        <p class="link-text"><span data-translate="noAccount">Don't have an account ?</span> <a id="goToRegisterBtn" data-translate="register">Register</a></p>
+    </form>
+
+    <form class="form-container hidden" id="registerContainer">
+        <p class="title" data-translate="titleRegister">Register</p>
+        <p class="message" data-translate="messageRegister">Signup now and get full access to our app.</p>
+
+        <div class="flex">
+            <label>
+                <input required placeholder="" type="text" class="input" id="firstname">
+                <span data-translate="firstname">Firstname</span>
+            </label>
+            <label>
+                <input required placeholder="" type="text" class="input" id="lastname">
+                <span data-translate="lastname">Lastname</span>
+            </label>
+        </div>
+
+        <label>
+            <select required class="input" id="country">
+                <option value="" data-translate-option="selectCountry">Select country</option>
+                <option value="UA" data-translate-option="countryUA">🇺🇦 Ukraine</option>
+                <option value="PL" data-translate-option="countryPL">🇵🇱 Poland</option>
+                <option value="DE" data-translate-option="countryDE">🇩🇪 Germany</option>
+                <option value="FR" data-translate-option="countryFR">🇫🇷 France</option>
+                <option value="IT" data-translate-option="countryIT">🇮🇹 Italy</option>
+                <option value="ES" data-translate-option="countryES">🇪🇸 Spain</option>
+                <option value="GB" data-translate-option="countryGB">🇬🇧 United Kingdom</option>
+                <option value="NL" data-translate-option="countryNL">🇳🇱 Netherlands</option>
+                <option value="BE" data-translate-option="countryBE">🇧🇪 Belgium</option>
+                <option value="AT" data-translate-option="countryAT">🇦🇹 Austria</option>
+                <option value="CH" data-translate-option="countryCH">🇨🇭 Switzerland</option>
+                <option value="SE" data-translate-option="countrySE">🇸🇪 Sweden</option>
+                <option value="NO" data-translate-option="countryNO">🇳🇴 Norway</option>
+                <option value="DK" data-translate-option="countryDK">🇩🇰 Denmark</option>
+                <option value="FI" data-translate-option="countryFI">🇫🇮 Finland</option>
+                <option value="PT" data-translate-option="countryPT">🇵🇹 Portugal</option>
+                <option value="GR" data-translate-option="countryGR">🇬🇷 Greece</option>
+                <option value="CZ" data-translate-option="countryCZ">🇨🇿 Czech Republic</option>
+                <option value="RO" data-translate-option="countryRO">🇷🇴 Romania</option>
+                <option value="HU" data-translate-option="countryHU">🇭🇺 Hungary</option>
+            </select>
+        </label>
+
+        <div class="phone-wrapper">
+            <label style="flex: 0 0 25%; margin: 0;">
+                <select class="input" id="phoneCountry" style="padding: 10px;">
+                    <option value="">🌍</option>
+                    <option value="UA" data-code="+380" data-short="🇺🇦 UA">🇺🇦 UA +380</option>
+                    <option value="PL" data-code="+48" data-short="🇵🇱 PL">🇵🇱 PL +48</option>
+                    <option value="DE" data-code="+49" data-short="🇩🇪 DE">🇩🇪 DE +49</option>
+                    <option value="FR" data-code="+33" data-short="🇫🇷 FR">🇫🇷 FR +33</option>
+                    <option value="IT" data-code="+39" data-short="🇮🇹 IT">🇮🇹 IT +39</option>
+                    <option value="ES" data-code="+34" data-short="🇪🇸 ES">🇪🇸 ES +34</option>
+                    <option value="GB" data-code="+44" data-short="🇬🇧 GB">🇬🇧 GB +44</option>
+                    <option value="NL" data-code="+31" data-short="🇳🇱 NL">🇳🇱 NL +31</option>
+                    <option value="BE" data-code="+32" data-short="🇧🇪 BE">🇧🇪 BE +32</option>
+                    <option value="AT" data-code="+43" data-short="🇦🇹 AT">🇦🇹 AT +43</option>
+                    <option value="CH" data-code="+41" data-short="🇨🇭 CH">🇨🇭 CH +41</option>
+                    <option value="SE" data-code="+46" data-short="🇸🇪 SE">🇸🇪 SE +46</option>
+                    <option value="NO" data-code="+47" data-short="🇳🇴 NO">🇳🇴 NO +47</option>
+                    <option value="DK" data-code="+45" data-short="🇩🇰 DK">🇩🇰 DK +45</option>
+                    <option value="FI" data-code="+358" data-short="🇫🇮 FI">🇫🇮 FI +358</option>
+                    <option value="PT" data-code="+351" data-short="🇵🇹 PT">🇵🇹 PT +351</option>
+                    <option value="GR" data-code="+30" data-short="🇬🇷 GR">🇬🇷 GR +30</option>
+                    <option value="CZ" data-code="+420" data-short="🇨🇿 CZ">🇨🇿 CZ +420</option>
+                    <option value="RO" data-code="+40" data-short="🇷🇴 RO">🇷🇴 RO +40</option>
+                    <option value="HU" data-code="+36" data-short="🇭🇺 HU">🇭🇺 HU +36</option>
+                </select>
+            </label>
+            <label style="flex: 1; margin: 0;">
+                <input required placeholder="" type="tel" class="input" id="phone" style="padding: 10px 10px 20px 10px;">
+                <span data-translate="phone">Phone</span>
+            </label>
+        </div>
+        <div class="error-message" id="phoneError"></div>
+
+        <label>
+            <input required placeholder="" type="email" class="input" id="registerEmail">
+            <span>Email</span>
+        </label>
+        <div class="error-message" id="emailError"></div>
+
+        <label>
+            <input required placeholder="" type="password" class="input" id="registerPassword">
+            <span data-translate="passwordRegister">Password</span>
+        </label>
+        <div class="error-message" id="passwordError"></div>
+
+        <label>
+            <input required placeholder="" type="password" class="input" id="confirmPassword">
+            <span data-translate="confirmPassword">Confirm password</span>
+        </label>
+        <div class="error-message" id="confirmPasswordError"></div>
+
+        <button type="submit" class="submit" data-translate="submit">Submit</button>
+        <p class="link-text"><span data-translate="haveAccount">Already have an account ?</span> <a id="goToSigninBtn" data-translate="signin">Signin</a></p>
+    </form>
+
+    <form class="form-container hidden" id="verify2faContainer">
+        <p class="title" data-translate="title2FA">Verify 2FA</p>
+        <p class="message" data-translate="message2FA">A verification code has been sent to your Discord. Please enter it below.</p>
+
+        <label>
+            <input required placeholder="" type="text" class="input" id="2faCode" autocomplete="off">
+            <span data-translate="2faCode">Verification Code</span>
+        </label>
+        <div class="error-message" id="2faError"></div>
+
+        <button type="submit" class="submit" data-translate="verify">Verify</button>
+        <p class="link-text"><a href="#" id="backToSigninBtn" data-translate="backToSignin">Back to Signin</a></p>
+    </form>
+
+    <form class="form-container hidden" id="verifyEmailContainer">
+        <p class="title" data-translate="titleVerifyEmail">Verify Email</p>
+        <p class="message" data-translate="messageVerifyEmail">We sent a verification code and link to your email. Enter the code below or open the link.</p>
+
+        <label>
+            <input required placeholder="" type="email" class="input" id="verifyEmailEmail" readonly>
+            <span data-translate="resetEmailLabel">Email</span>
+        </label>
+        <div class="error-message" id="verifyEmailEmailError"></div>
+
+        <label>
+            <input required placeholder="" type="text" class="input" id="verifyEmailCode">
+            <span data-translate="verifyEmailCodeLabel">Verification code from email</span>
+        </label>
+        <div class="error-message" id="verifyEmailCodeError"></div>
+
+        <button type="submit" class="submit" data-translate="verifyEmailSubmit">Verify Email</button>
+        <p class="link-text"><a href="#" id="backToSigninFromVerifyEmail" data-translate="backToSignin">Back to Signin</a></p>
+    </form>
+
+    <form class="form-container hidden" id="resetPasswordContainer">
+        <p class="title" data-translate="titleReset">Reset Password</p>
+        <p class="message" data-translate="messageReset">Enter your email and we will send you a reset code.</p>
+
+        <label>
+            <input required placeholder="" type="email" class="input" id="resetEmail">
+            <span data-translate="resetEmailLabel">Email</span>
+        </label>
+        <div class="error-message" id="resetEmailError"></div>
+
+        <button type="submit" class="submit" data-translate="sendReset">Send reset code</button>
+        <p class="link-text">
+            <a href="#" id="backToSigninFromReset" data-translate="backToSignin">Back to Signin</a>
+        </p>
+    </form>
+
+    <form class="form-container hidden" id="confirmResetContainer">
+        <p class="title" data-translate="titleConfirmReset">Enter Reset Code</p>
+        <p class="message" data-translate="messageConfirmReset">Check your email or Discord and enter the code with a new password.</p>
+
+        <label>
+            <input required placeholder="" type="email" class="input" id="confirmEmail">
+            <span data-translate="resetEmailLabel">Email</span>
+        </label>
+        <div class="error-message" id="confirmEmailError"></div>
+
+        <label>
+            <input required placeholder="" type="text" class="input" id="resetCode">
+            <span data-translate="resetCode">Reset code</span>
+        </label>
+        <div class="error-message" id="resetCodeError"></div>
+
+        <label>
+            <input required placeholder="" type="password" class="input" id="resetNewPassword">
+            <span data-translate="newPassword">New password</span>
+        </label>
+        <div class="error-message" id="resetNewPasswordError"></div>
+
+        <label>
+            <input required placeholder="" type="password" class="input" id="resetConfirmPassword">
+            <span data-translate="confirmNewPassword">Confirm new password</span>
+        </label>
+        <div class="error-message" id="resetConfirmPasswordError"></div>
+
+        <button type="submit" class="submit" data-translate="confirmResetSubmit">Reset password</button>
+        <p class="link-text">
+            <a href="#" id="backToResetBtn" data-translate="backToReset">Back to reset step</a>
+        </p>
+    </form>
+
+    <div class="scene-wrapper">
+        <div class="characters-wrapper">
+            <div class="characters-container">
+                <div class="thought-bubble" id="thoughtBubble"></div>
+                <div class="characters">
+                    <div class="character character-1 look-login" id="char1">
+                        <div class="eyes">
+                            <div class="eye"><div class="pupil"></div></div>
+                            <div class="eye"><div class="pupil"></div></div>
+                        </div>
+                        <div class="notebook">
+                            <div class="notebook-line"></div>
+                            <div class="notebook-line2"></div>
+                        </div>
+                        <div class="pencil"></div>
+                        <div class="eraser"></div>
+                    </div>
+                    <div class="character character-2 look-login" id="char2">
+                        <div class="eyes">
+                            <div class="eye"><div class="pupil"></div></div>
+                            <div class="eye"><div class="pupil"></div></div>
+                        </div>
+                        <div class="notebook">
+                            <div class="notebook-line"></div>
+                            <div class="notebook-line2"></div>
+                        </div>
+                        <div class="pencil"></div>
+                        <div class="eraser"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grass"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const signinContainer = document.getElementById('signinContainer');
+    const registerContainer = document.getElementById('registerContainer');
+    const verify2faContainer = document.getElementById('verify2faContainer');
+    const verifyEmailContainer = document.getElementById('verifyEmailContainer');
+    const resetPasswordContainer = document.getElementById('resetPasswordContainer');
+    const confirmResetContainer = document.getElementById('confirmResetContainer');
+
+    const goToRegisterBtn = document.getElementById('goToRegisterBtn');
+    const goToSigninBtn = document.getElementById('goToSigninBtn');
+    const backToSigninBtn = document.getElementById('backToSigninBtn');
+    const backToSigninFromVerifyEmail = document.getElementById('backToSigninFromVerifyEmail');
+    const forgotPasswordLink = document.querySelector('.forgot-link');
+    const backToSigninFromReset = document.getElementById('backToSigninFromReset');
+    const backToResetBtn = document.getElementById('backToResetBtn');
+
+    const signinEmail = document.getElementById('signinEmail');
+    const signinPassword = document.getElementById('signinPassword');
+    const showPasswordCheckbox = document.getElementById('showPassword');
+
+    const countrySelect = document.getElementById('country');
+    const phoneCountrySelect = document.getElementById('phoneCountry');
+    const phoneInput = document.getElementById('phone');
+
+    const registerInputs = {
+        firstname: document.getElementById('firstname'),
+        lastname: document.getElementById('lastname'),
+        country: countrySelect,
+        phoneCountry: phoneCountrySelect,
+        phone: phoneInput,
+        email: document.getElementById('registerEmail'),
+        password: document.getElementById('registerPassword'),
+        confirmPassword: document.getElementById('confirmPassword')
+    };
+
+    const char1 = document.getElementById('char1');
+    const char2 = document.getElementById('char2');
+    const thoughtBubble = document.getElementById('thoughtBubble');
+
+    let currentLang = 'en';
+    let currentPage = 'signin';
+    let typingTimeout = null;
+    let lastInputLength = {};
+    let thoughtTimeout = null;
+    let currentUserIdFor2FA = null;
+    let resetEmailGlobal = null;
+    let currentUserIdForVerifyEmail = null;
+    let verifyEmailCurrentEmail = null;
+
+    const API_URL = 'http://localhost:8000/auth';
+
+    const phoneCodes = {
+        'UA': '+380', 'PL': '+48', 'DE': '+49', 'FR': '+33', 'IT': '+39',
+        'ES': '+34', 'GB': '+44', 'NL': '+31', 'BE': '+32', 'AT': '+43',
+        'CH': '+41', 'SE': '+46', 'NO': '+47', 'DK': '+45', 'FI': '+358',
+        'PT': '+351', 'GR': '+30', 'CZ': '+420', 'RO': '+40', 'HU': '+36'
+    };
+
+    const translations = {
+        en: {
+            titleSignin: 'Sign In',
+            messageSignin: 'Welcome back! Please login to your account.',
+            password: 'Password',
+            showPassword: 'Show password',
+            forgotPassword: 'Forgot Password ?',
+            signIn: 'Sign In',
+            noAccount: 'Don\'t have an account ?',
+            register: 'Register',
+            titleRegister: 'Register',
+            messageRegister: 'Signup now and get full access to our app.',
+            firstname: 'Firstname',
+            lastname: 'Lastname',
+            country: 'Country of residence',
+            phone: 'Phone',
+            passwordRegister: 'Password',
+            confirmPassword: 'Confirm password',
+            submit: 'Submit',
+            haveAccount: 'Already have an account ?',
+            signin: 'Signin',
+            selectCountry: 'Select country',
+            countryUA: '🇺🇦 Ukraine',
+            countryPL: '🇵🇱 Poland',
+            countryDE: '🇩🇪 Germany',
+            countryFR: '🇫🇷 France',
+            countryIT: '🇮🇹 Italy',
+            countryES: '🇪🇸 Spain',
+            countryGB: '🇬🇧 United Kingdom',
+            countryNL: '🇳🇱 Netherlands',
+            countryBE: '🇧🇪 Belgium',
+            countryAT: '🇦🇹 Austria',
+            countryCH: '🇨🇭 Switzerland',
+            countrySE: '🇸🇪 Sweden',
+            countryNO: '🇳🇴 Norway',
+            countryDK: '🇩🇰 Denmark',
+            countryFI: '🇫🇮 Finland',
+            countryPT: '🇵🇹 Portugal',
+            countryGR: '🇬🇷 Greece',
+            countryCZ: '🇨🇿 Czech Republic',
+            countryRO: '🇷🇴 Romania',
+            countryHU: '🇭🇺 Hungary',
+            errorEmail: 'Please enter a valid email address',
+            errorPhone: 'Please enter a valid phone number',
+            errorPasswordMatch: 'Passwords do not match',
+            errorPhoneCode: 'Phone number does not match selected country code',
+            title2FA: 'Verify 2FA',
+            message2FA: 'A verification code has been sent to your Discord. Please enter it below.',
+            '2faCode': 'Verification Code',
+            verify: 'Verify',
+            backToSignin: 'Back to Signin',
+            titleReset: 'Reset Password',
+            messageReset: 'Enter your email and we will send you a reset code.',
+            resetEmailLabel: 'Email',
+            sendReset: 'Send reset code',
+            titleConfirmReset: 'Enter Reset Code',
+            messageConfirmReset: 'Check your email or Discord and enter the code with a new password.',
+            resetCode: 'Reset code',
+            newPassword: 'New password',
+            confirmNewPassword: 'Confirm new password',
+            confirmResetSubmit: 'Reset password',
+            backToReset: 'Back to reset step',
+            resetSuccess: 'Password has been reset. You can now log in.',
+            resetFailed: 'Password reset failed. Please check the code and try again.',
+            titleVerifyEmail: 'Verify Email',
+            messageVerifyEmail: 'We sent a verification code and link to your email. Enter the code below or open the link.',
+            verifyEmailCodeLabel: 'Verification code from email',
+            verifyEmailSubmit: 'Verify Email',
+            emailVerifySuccess: 'Email verified. You can now log in.',
+            emailVerifyFailed: 'Email verification failed. Please check the code.',
+            emailNotVerified: 'Email not verified. Please check your inbox and confirm your email.'
+        },
+        uk: {
+            titleSignin: 'Увійти',
+            messageSignin: 'Ласкаво просимо! Будь ласка, увійдіть у свій обліковий запис.',
+            password: 'Пароль',
+            showPassword: 'Показати пароль',
+            forgotPassword: 'Забули пароль ?',
+            signIn: 'Увійти',
+            noAccount: 'Немає облікового запису ?',
+            register: 'Реєстрація',
+            titleRegister: 'Реєстрація',
+            messageRegister: 'Зареєструйтеся зараз і отримаєте повний доступ до нашого додатку.',
+            firstname: 'Ім\'я',
+            lastname: 'Прізвище',
+            country: 'Країна проживання',
+            phone: 'Телефон',
+            passwordRegister: 'Пароль',
+            confirmPassword: 'Підтвердіть пароль',
+            submit: 'Відправити',
+            haveAccount: 'Вже є акаунт ?',
+            signin: 'Увійти',
+            selectCountry: 'Оберіть країну',
+            countryUA: '🇺🇦 Україна',
+            countryPL: '🇵🇱 Польща',
+            countryDE: '🇩🇪 Німеччина',
+            countryFR: '🇫🇷 Франція',
+            countryIT: '🇮🇹 Італія',
+            countryES: '🇪🇸 Іспанія',
+            countryGB: '🇬🇧 Великобританія',
+            countryNL: '🇳🇱 Нідерланди',
+            countryBE: '🇧🇪 Бельгія',
+            countryAT: '🇦🇹 Австрія',
+            countryCH: '🇨🇭 Швейцарія',
+            countrySE: '🇸🇪 Швеція',
+            countryNO: '🇳орвегія',
+            countryDK: '🇩анія',
+            countryFI: '🇫інляндія',
+            countryPT: '🇵ортугалія',
+            countryGR: '🇬реція',
+            countryCZ: '🇨🇿 Чехія',
+            countryRO: '🇷умунія',
+            countryHU: '🇭🇺 Угорщина',
+            errorEmail: 'Будь ласка, введіть правильну email адресу',
+            errorPhone: 'Будь ласка, введіть правильний номер телефону',
+            errorPasswordMatch: 'Паролі не співпадають',
+            errorPhoneCode: 'Номер телефону не відповідає вибраному коду країни',
+            title2FA: 'Підтвердити 2FA',
+            message2FA: 'Код підтвердження надіслано у ваш Discord. Будь ласка, введіть його нижче.',
+            '2faCode': 'Код підтвердження',
+            verify: 'Підтвердити',
+            backToSignin: 'Повернутися до входу',
+            titleReset: 'Скинути пароль',
+            messageReset: 'Введіть свій email, і ми надішлемо код для скидання.',
+            resetEmailLabel: 'Email',
+            sendReset: 'Надіслати код',
+            titleConfirmReset: 'Введіть код скидання',
+            messageConfirmReset: 'Перевірте email або Discord і введіть код з новим паролем.',
+            resetCode: 'Код скидання',
+            newPassword: 'Новий пароль',
+            confirmNewPassword: 'Підтвердіть новий пароль',
+            confirmResetSubmit: 'Скинути пароль',
+            backToReset: 'Назад до скидання',
+            resetSuccess: 'Пароль успішно скинуто. Тепер ви можете увійти.',
+            resetFailed: 'Не вдалося скинути пароль. Перевірте код і спробуйте ще раз.',
+            titleVerifyEmail: 'Підтвердження email',
+            messageVerifyEmail: 'Ми надіслали код і посилання на ваш email. Введіть код нижче або перейдіть за посиланням.',
+            verifyEmailCodeLabel: 'Код підтвердження з email',
+            verifyEmailSubmit: 'Підтвердити email',
+            emailVerifySuccess: 'Email підтверджено. Тепер ви можете увійти.',
+            emailVerifyFailed: 'Не вдалося підтвердити email. Перевірте код.',
+            emailNotVerified: 'Email не підтверджений. Перевірте пошту та підтвердьте email.'
+        }
+    };
+
+    function changeLook(lookClass) {
+        char1.className = 'character character-1 ' + lookClass;
+        char2.className = 'character character-2 ' + lookClass;
+    }
+
+    function addAction(action) {
+        if (currentPage !== 'register') return;
+        char1.classList.add(action);
+        char2.classList.add(action);
+    }
+
+    function removeActions() {
+        char1.classList.remove('writing', 'erasing');
+        char2.classList.remove('writing', 'erasing');
+    }
+
+    function showThought(message) {
+        thoughtBubble.textContent = message;
+        thoughtBubble.classList.add('show');
+        clearTimeout(thoughtTimeout);
+        thoughtTimeout = setTimeout(() => {
+            thoughtBubble.classList.remove('show');
+        }, 3000);
+    }
+
+    function hideThought() {
+        thoughtBubble.classList.remove('show');
+    }
+
+    function handleInput(inputId, newLength) {
+        const oldLength = lastInputLength[inputId] || 0;
+        if (newLength < oldLength) {
+            addAction('erasing');
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(removeActions, 300);
+        } else if (newLength > oldLength) {
+            addAction('writing');
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(removeActions, 500);
+        }
+        lastInputLength[inputId] = newLength;
+    }
+
+    signinEmail.addEventListener('focus', () => {
+        if (!showPasswordCheckbox.checked) {
+            changeLook('look-login');
+        }
+    });
+
+    signinPassword.addEventListener('focus', () => {
+        if (showPasswordCheckbox.checked) {
+            changeLook('look-away');
+        } else {
+            changeLook('look-password');
+        }
+    });
+
+    showPasswordCheckbox.addEventListener('change', (e) => {
+        signinPassword.type = e.target.checked ? 'text' : 'password';
+        changeLook(e.target.checked ? 'look-away' : 'look-password');
+    });
+
+    registerInputs.firstname.addEventListener('focus', () => changeLook('look-firstname'));
+    registerInputs.firstname.addEventListener('input', (e) => handleInput('firstname', e.target.value.length));
+
+    registerInputs.lastname.addEventListener('focus', () => changeLook('look-lastname'));
+    registerInputs.lastname.addEventListener('input', (e) => handleInput('lastname', e.target.value.length));
+
+    registerInputs.country.addEventListener('focus', () => changeLook('look-country'));
+    registerInputs.country.addEventListener('change', () => {
+        if (currentPage === 'register') {
+            addAction('writing');
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(removeActions, 500);
+        }
+    });
+
+    phoneCountrySelect.addEventListener('focus', () => changeLook('look-phone'));
+    phoneCountrySelect.addEventListener('change', () => {
+        const selectedCountry = phoneCountrySelect.value;
+        if (selectedCountry) {
+            const selectedOption = phoneCountrySelect.options[phoneCountrySelect.selectedIndex];
+            const shortText = selectedOption.getAttribute('data-short');
+            const tempOption = document.createElement('option');
+            tempOption.value = selectedCountry;
+            tempOption.textContent = shortText;
+            tempOption.selected = true;
+            tempOption.style.display = 'none';
+            const oldTemp = phoneCountrySelect.querySelector('option[style*="display: none"]');
+            if (oldTemp) oldTemp.remove();
+            phoneCountrySelect.insertBefore(tempOption, phoneCountrySelect.firstChild);
+
+            const newCode = phoneCodes[selectedCountry];
+            if (phoneInput.value) {
+                let phoneNumber = phoneInput.value.replace(/\D/g, '');
+                for (let country in phoneCodes) {
+                    const code = phoneCodes[country].replace('+', '');
+                    if (phoneNumber.startsWith(code)) {
+                        phoneNumber = phoneNumber.substring(code.length);
+                        break;
+                    }
+                }
+                phoneInput.value = newCode + phoneNumber;
+            } else {
+                phoneInput.value = newCode;
+            }
+            phoneInput.focus();
+        }
+        if (currentPage === 'register') {
+            addAction('writing');
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(removeActions, 500);
+        }
+    });
+
+    phoneInput.addEventListener('focus', () => changeLook('look-phone'));
+    phoneInput.addEventListener('input', (e) => {
+        let value = e.target.value;
+
+        if (!value || value.trim() === '') {
+            phoneCountrySelect.value = '';
+            const oldTemp = phoneCountrySelect.querySelector('option[style*="display: none"]');
+            if (oldTemp) oldTemp.remove();
+            handleInput('phone', 0);
+            return;
+        }
+
+        if (!value.startsWith('+')) {
+            value = '+' + value.replace(/\D/g, '');
+            e.target.value = value;
+        }
+
+        const numbers = value.replace(/\D/g, '');
+
+        if (numbers.length === 0) {
+            phoneCountrySelect.value = '';
+            const oldTemp = phoneCountrySelect.querySelector('option[style*="display: none"]');
+            if (oldTemp) oldTemp.remove();
+            handleInput('phone', 0);
+            return;
+        }
+
+        let detectedCountry = null;
+        for (let country in phoneCodes) {
+            const code = phoneCodes[country].replace('+', '');
+            if (numbers.startsWith(code)) {
+                detectedCountry = country;
+                break;
+            }
+        }
+
+        if (detectedCountry && phoneCountrySelect.value !== detectedCountry) {
+            phoneCountrySelect.value = detectedCountry;
+            const selectedOption = phoneCountrySelect.options[phoneCountrySelect.selectedIndex];
+            const shortText = selectedOption.getAttribute('data-short');
+            const tempOption = document.createElement('option');
+            tempOption.value = detectedCountry;
+            tempOption.textContent = shortText;
+            tempOption.selected = true;
+            tempOption.style.display = 'none';
+            const oldTemp = phoneCountrySelect.querySelector('option[style*="display: none"]');
+            if (oldTemp) oldTemp.remove();
+            phoneCountrySelect.insertBefore(tempOption, phoneCountrySelect.firstChild);
+        } else if (!detectedCountry && numbers.length > 0) {
+            phoneCountrySelect.value = '';
+            const oldTemp = phoneCountrySelect.querySelector('option[style*="display: none"]');
+            if (oldTemp) oldTemp.remove();
+        }
+
+        handleInput('phone', value.length);
+    });
+
+    registerInputs.email.addEventListener('focus', () => changeLook('look-email'));
+    registerInputs.email.addEventListener('input', (e) => handleInput('email', e.target.value.length));
+    registerInputs.email.addEventListener('blur', () => {
+        const emailError = document.getElementById('emailError');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (registerInputs.email.value && !emailRegex.test(registerInputs.email.value)) {
+            emailError.textContent = translations[currentLang].errorEmail;
+            emailError.classList.add('show');
+            showThought(translations[currentLang].errorEmail);
+        } else {
+            emailError.classList.remove('show');
+            hideThought();
+        }
+    });
+
+    registerInputs.password.addEventListener('focus', () => changeLook('look-regpassword'));
+    registerInputs.password.addEventListener('input', (e) => handleInput('password', e.target.value.length));
+
+    registerInputs.confirmPassword.addEventListener('focus', () => changeLook('look-confirmpass'));
+    registerInputs.confirmPassword.addEventListener('input', (e) => handleInput('confirmPassword', e.target.value.length));
+    registerInputs.confirmPassword.addEventListener('blur', () => {
+        const confirmError = document.getElementById('confirmPasswordError');
+        if (registerInputs.confirmPassword.value && registerInputs.password.value !== registerInputs.confirmPassword.value) {
+            confirmError.textContent = translations[currentLang].errorPasswordMatch;
+            confirmError.classList.add('show');
+            showThought(translations[currentLang].errorPasswordMatch);
+        } else {
+            confirmError.classList.remove('show');
+            hideThought();
+        }
+    });
+
+    registerInputs.phone.addEventListener('blur', () => {
+        const phoneError = document.getElementById('phoneError');
+        const phoneCountry = registerInputs.phoneCountry.value;
+        const phone = registerInputs.phone.value.trim();
+
+        phoneError.classList.remove('show');
+        hideThought();
+
+        if (!phone) return;
+
+        if (!phone.startsWith('+')) {
+            phoneError.textContent = translations[currentLang].errorPhone;
+            phoneError.classList.add('show');
+            showThought(translations[currentLang].errorPhone);
+            return;
+        }
+
+        const phoneDigits = phone.replace(/\D/g, '');
+
+        if (phoneDigits.length === 0) {
+            phoneError.textContent = translations[currentLang].errorPhone;
+            phoneError.classList.add('show');
+            showThought(translations[currentLang].errorPhone);
+            return;
+        }
+
+        if (!phoneCountry) {
+            phoneError.textContent = translations[currentLang].errorPhone;
+            phoneError.classList.add('show');
+            showThought(translations[currentLang].errorPhone);
+            return;
+        }
+
+        const countryCode = phoneCodes[phoneCountry].replace('+', '');
+        const expectedMinLength = countryCode.length + 7;
+        const expectedMaxLength = countryCode.length + 15;
+
+        if (phoneDigits.length < expectedMinLength || phoneDigits.length > expectedMaxLength || !phoneDigits.startsWith(countryCode)) {
+            phoneError.textContent = translations[currentLang].errorPhone;
+            phoneError.classList.add('show');
+            showThought(translations[currentLang].errorPhone);
+        }
+    });
+
+    function switchLanguage(lang) {
+        currentLang = lang;
+        document.querySelectorAll('[data-translate]').forEach(el => {
+            const key = el.getAttribute('data-translate');
+            if (translations[lang][key]) {
+                el.textContent = translations[lang][key];
+            }
+        });
+        document.querySelectorAll('[data-translate-option]').forEach(el => {
+            const key = el.getAttribute('data-translate-option');
+            if (translations[lang][key]) {
+                el.textContent = translations[lang][key];
+            }
+        });
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+        });
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchLanguage(btn.getAttribute('data-lang'));
+        });
+    });
+
+    goToRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = 'register';
+        signinContainer.classList.add('hidden');
+        registerContainer.classList.remove('hidden');
+        verify2faContainer.classList.add('hidden');
+        verifyEmailContainer.classList.add('hidden');
+        resetPasswordContainer.classList.add('hidden');
+        confirmResetContainer.classList.add('hidden');
+        changeLook('look-firstname');
+        removeActions();
+        lastInputLength = {};
+    });
+
+    goToSigninBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = 'signin';
+        registerContainer.classList.add('hidden');
+        signinContainer.classList.remove('hidden');
+        verify2faContainer.classList.add('hidden');
+        verifyEmailContainer.classList.add('hidden');
+        resetPasswordContainer.classList.add('hidden');
+        confirmResetContainer.classList.add('hidden');
+        changeLook('look-login');
+        removeActions();
+    });
+
+    backToSigninBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = 'signin';
+        verify2faContainer.classList.add('hidden');
+        signinContainer.classList.remove('hidden');
+        verifyEmailContainer.classList.add('hidden');
+        resetPasswordContainer.classList.add('hidden');
+        confirmResetContainer.classList.add('hidden');
+        document.getElementById('2faCode').value = '';
+        currentUserIdFor2FA = null;
+        changeLook('look-login');
+    });
+
+    backToSigninFromVerifyEmail.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = 'signin';
+        verifyEmailContainer.classList.add('hidden');
+        signinContainer.classList.remove('hidden');
+        registerContainer.classList.add('hidden');
+        verify2faContainer.classList.add('hidden');
+        resetPasswordContainer.classList.add('hidden');
+        confirmResetContainer.classList.add('hidden');
+        changeLook('look-login');
+        removeActions();
+    });
+
+    forgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = 'reset';
+        const resetEmailInput = document.getElementById('resetEmail');
+        resetEmailInput.value = signinEmail.value;
+        signinContainer.classList.add('hidden');
+        registerContainer.classList.add('hidden');
+        verify2faContainer.classList.add('hidden');
+        verifyEmailContainer.classList.add('hidden');
+        confirmResetContainer.classList.add('hidden');
+        resetPasswordContainer.classList.remove('hidden');
+        changeLook('look-email');
+        removeActions();
+    });
+
+    backToSigninFromReset.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = 'signin';
+        resetPasswordContainer.classList.add('hidden');
+        confirmResetContainer.classList.add('hidden');
+        signinContainer.classList.remove('hidden');
+        verifyEmailContainer.classList.add('hidden');
+        changeLook('look-login');
+        removeActions();
+    });
+
+    backToResetBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = 'reset';
+        confirmResetContainer.classList.add('hidden');
+        resetPasswordContainer.classList.remove('hidden');
+        verifyEmailContainer.classList.add('hidden');
+        changeLook('look-email');
+        removeActions();
+    });
+
+    document.getElementById('signinContainer').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideThought();
+
+        const email = signinEmail.value.trim();
+        const password = signinPassword.value;
+
+        if (!email || !password) {
+            const msg = currentLang === 'en' ? 'Please fill in all fields!' : 'Будь ласка, заповніть всі поля!';
+            showThought(msg);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/login/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                data = null;
+            }
+
+            if (response.ok) {
+                if (data && data.requires_2fa) {
+                    currentUserIdFor2FA = data.user_id;
+                    currentPage = '2fa';
+                    signinContainer.classList.add('hidden');
+                    verify2faContainer.classList.remove('hidden');
+                    resetPasswordContainer.classList.add('hidden');
+                    confirmResetContainer.classList.add('hidden');
+                    verifyEmailContainer.classList.add('hidden');
+                    document.getElementById('2faCode').focus();
+                    changeLook('look-away');
+                } else {
+                    if (data && data.tokens && data.tokens.access && data.tokens.refresh) {
+                        localStorage.setItem('access_token', data.tokens.access);
+                        localStorage.setItem('refresh_token', data.tokens.refresh);
+                    }
+                    if (data && data.user) {
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                    }
+                    window.location.href = 'index.html';
+                }
+            } else {
+                const rawError = data && (data.error || data.detail || JSON.stringify(data));
+                let errorMsg;
+                const lower = (rawError || '').toLowerCase();
+                if (lower.includes('not verified') || lower.includes('verify email')) {
+                    errorMsg = translations[currentLang].emailNotVerified;
+                } else {
+                    errorMsg = currentLang === 'en'
+                        ? (data && data.error ? data.error : 'Invalid credentials!')
+                        : (data && data.error ? data.error : 'Невірні дані!');
+                }
+                showThought(errorMsg);
+            }
+        } catch (error) {
+            const errorMsg = currentLang === 'en'
+                ? 'Connection error. Please try again.'
+                : 'Помилка з\'єднання. Спробуйте ще раз.';
+            showThought(errorMsg);
+            console.error('Login error:', error);
+        }
+    });
+
+    document.getElementById('registerContainer').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+        hideThought();
+
+        const firstName = registerInputs.firstname.value.trim();
+        const lastName = registerInputs.lastname.value.trim();
+        const country = registerInputs.country.value;
+        const phoneCountry = registerInputs.phoneCountry.value;
+        const phone = registerInputs.phone.value.trim();
+        const email = registerInputs.email.value.trim();
+        const password = registerInputs.password.value;
+        const confirmPassword = registerInputs.confirmPassword.value;
+
+        if (!firstName || !lastName || !country || !phoneCountry || !phone || !email || !password || !confirmPassword) {
+            const msg = currentLang === 'en' ? 'Please fill in all fields!' : 'Будь ласка, заповніть всі поля!';
+            showThought(msg);
+            return;
+        }
+
+        if (!phone.startsWith('+')) {
+            document.getElementById('phoneError').textContent = translations[currentLang].errorPhone;
+            document.getElementById('phoneError').classList.add('show');
+            showThought(translations[currentLang].errorPhone);
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            document.getElementById('emailError').textContent = translations[currentLang].errorEmail;
+            document.getElementById('emailError').classList.add('show');
+            showThought(translations[currentLang].errorEmail);
+            return;
+        }
+
+        if (password.length < 8) {
+            const msg = currentLang === 'en' ? 'Password must be at least 8 characters!' : 'Пароль має містити щонайменше 8 символів!';
+            document.getElementById('passwordError').textContent = msg;
+            document.getElementById('passwordError').classList.add('show');
+            showThought(msg);
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            document.getElementById('confirmPasswordError').textContent = translations[currentLang].errorPasswordMatch;
+            document.getElementById('confirmPasswordError').classList.add('show');
+            showThought(translations[currentLang].errorPasswordMatch);
+            return;
+        }
+
+        const phoneDigits = phone.replace(/\D/g, '');
+        const countryCode = phoneCodes[phoneCountry].replace('+', '');
+        const expectedMinLength = countryCode.length + 7;
+        const expectedMaxLength = countryCode.length + 15;
+
+        if (phoneDigits.length < expectedMinLength || phoneDigits.length > expectedMaxLength) {
+            document.getElementById('phoneError').textContent = translations[currentLang].errorPhone;
+            document.getElementById('phoneError').classList.add('show');
+            showThought(translations[currentLang].errorPhone);
+            return;
+        }
+
+        if (!phoneDigits.startsWith(countryCode)) {
+            document.getElementById('phoneError').textContent = translations[currentLang].errorPhoneCode;
+            document.getElementById('phoneError').classList.add('show');
+            showThought(translations[currentLang].errorPhoneCode);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/register/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    first_name: firstName,
+                    last_name: lastName,
+                    country: country,
+                    phone: phone
+                })
+            });
+
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                data = null;
+            }
+
+            if (response.ok) {
+                const user = (data && data.user) ? data.user : data;
+                currentUserIdForVerifyEmail = user && user.id ? user.id : null;
+                verifyEmailCurrentEmail = user && user.email ? user.email : email;
+
+                const emailInput = document.getElementById('verifyEmailEmail');
+                emailInput.value = verifyEmailCurrentEmail;
+                document.getElementById('verifyEmailCode').value = '';
+                document.getElementById('verifyEmailCodeError').classList.remove('show');
+
+                signinContainer.classList.add('hidden');
+                registerContainer.classList.add('hidden');
+                verify2faContainer.classList.add('hidden');
+                resetPasswordContainer.classList.add('hidden');
+                confirmResetContainer.classList.add('hidden');
+                verifyEmailContainer.classList.remove('hidden');
+                currentPage = 'verifyEmail';
+                changeLook('look-email');
+
+                const msg = currentLang === 'en'
+                    ? 'We sent a verification code to your email. Enter it to verify your account.'
+                    : 'Ми надіслали код на ваш email. Введіть його, щоб підтвердити акаунт.';
+                showThought(msg);
+            } else {
+                if (data && data.email) {
+                    document.getElementById('emailError').textContent = data.email[0];
+                    document.getElementById('emailError').classList.add('show');
+                    showThought(data.email[0]);
+                } else if (data && data.phone) {
+                    document.getElementById('phoneError').textContent = data.phone[0];
+                    document.getElementById('phoneError').classList.add('show');
+                    showThought(data.phone[0]);
+                } else if (data && data.password) {
+                    document.getElementById('passwordError').textContent = data.password[0];
+                    document.getElementById('passwordError').classList.add('show');
+                    showThought(data.password[0]);
+                } else {
+                    const errorMsg = currentLang === 'en'
+                        ? 'Registration failed. Please check your data.'
+                        : 'Реєстрація не вдалася. Перевірте дані.';
+                    showThought(errorMsg);
+                }
+            }
+        } catch (error) {
+            const errorMsg = currentLang === 'en'
+                ? 'Connection error. Please try again.'
+                : 'Помилка з\'єднання. Спробуйте ще раз.';
+            showThought(errorMsg);
+            console.error('Registration error:', error);
+        }
+    });
+
+    document.getElementById('verify2faContainer').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideThought();
+
+        const code = document.getElementById('2faCode').value.trim();
+        const errorDiv = document.getElementById('2faError');
+        errorDiv.classList.remove('show');
+
+        if (!code) {
+            const msg = currentLang === 'en' ? 'Please enter the verification code.' : 'Будь ласка, введіть код підтвердження.';
+            showThought(msg);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/verify-2fa/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: currentUserIdFor2FA, code: code })
+            });
+
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                data = null;
+            }
+
+            if (response.ok) {
+                if (data && data.tokens && data.tokens.access && data.tokens.refresh) {
+                    localStorage.setItem('access_token', data.tokens.access);
+                    localStorage.setItem('refresh_token', data.tokens.refresh);
+                }
+                if (data && data.user) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                }
+                window.location.href = 'index.html';
+            } else {
+                const errorMsg = data && data.error
+                    ? data.error
+                    : (currentLang === 'en' ? 'Invalid or expired code.' : 'Невірний або застарілий код.');
+                errorDiv.textContent = errorMsg;
+                errorDiv.classList.add('show');
+                showThought(errorMsg);
+            }
+        } catch (error) {
+            const errorMsg = currentLang === 'en' ? 'Connection error. Please try again.' : 'Помилка з\'єднання. Спробуйте ще раз.';
+            showThought(errorMsg);
+            console.error('2FA verification error:', error);
+        }
+    });
+
+    document.getElementById('verifyEmailContainer').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideThought();
+
+        const codeInput = document.getElementById('verifyEmailCode');
+        const code = codeInput.value.trim();
+        const codeError = document.getElementById('verifyEmailCodeError');
+
+        codeError.classList.remove('show');
+
+        if (!code) {
+            const msg = currentLang === 'en' ? 'Please enter the verification code.' : 'Будь ласка, введіть код підтвердження.';
+            codeError.textContent = msg;
+            codeError.classList.add('show');
+            showThought(msg);
+            return;
+        }
+
+        if (!currentUserIdForVerifyEmail) {
+            const msg = currentLang === 'en'
+                ? 'User not found for verification. Try again from registration.'
+                : 'Користувача для підтвердження не знайдено. Спробуйте зареєструватися ще раз.';
+            codeError.textContent = msg;
+            codeError.classList.add('show');
+            showThought(msg);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/verify-email/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: currentUserIdForVerifyEmail, code: code })
+            });
+
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                data = null;
+            }
+
+            if (response.ok) {
+                const msg = translations[currentLang].emailVerifySuccess;
+                showThought(msg);
+
+                verifyEmailContainer.classList.add('hidden');
+                signinContainer.classList.remove('hidden');
+                currentPage = 'signin';
+                changeLook('look-login');
+
+                const emailFromResp = data && (data.email || (data.user && data.user.email) || verifyEmailCurrentEmail);
+                if (emailFromResp) {
+                    signinEmail.value = emailFromResp;
+                }
+                signinPassword.value = '';
+                codeInput.value = '';
+            } else {
+                const msg = (data && data.error) ? data.error : translations[currentLang].emailVerifyFailed;
+                codeError.textContent = msg;
+                codeError.classList.add('show');
+                showThought(msg);
+            }
+        } catch (error) {
+            const msg = currentLang === 'en'
+                ? 'Connection error. Please try again.'
+                : 'Помилка з\'єднання. Спробуйте ще раз.';
+            codeError.textContent = msg;
+            codeError.classList.add('show');
+            showThought(msg);
+            console.error('Email verification error:', error);
+        }
+    });
+
+    document.getElementById('resetPasswordContainer').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideThought();
+        const emailInput = document.getElementById('resetEmail');
+        const errorDiv = document.getElementById('resetEmailError');
+        errorDiv.classList.remove('show');
+
+        const email = emailInput.value.trim();
+        if (!email) {
+            const msg = currentLang === 'en' ? 'Please enter your email.' : 'Будь ласка, введіть ваш email.';
+            errorDiv.textContent = msg;
+            errorDiv.classList.add('show');
+            showThought(msg);
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            errorDiv.textContent = translations[currentLang].errorEmail;
+            errorDiv.classList.add('show');
+            showThought(translations[currentLang].errorEmail);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/request-password-reset/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                data = null;
+            }
+
+            if (response.ok) {
+                resetEmailGlobal = email;
+                const confirmEmailInput = document.getElementById('confirmEmail');
+                confirmEmailInput.value = email;
+
+                resetPasswordContainer.classList.add('hidden');
+                confirmResetContainer.classList.remove('hidden');
+                currentPage = 'confirmReset';
+                changeLook('look-email');
+
+                const msg = currentLang === 'en'
+                    ? 'Reset code has been sent. Check your email or Discord.'
+                    : 'Код для скидання надіслано. Перевірте email або Discord.';
+                showThought(msg);
+            } else {
+                const msg = data && data.error
+                    ? data.error
+                    : (currentLang === 'en' ? 'Password reset request failed.' : 'Не вдалося надіслати код для скидання.');
+                errorDiv.textContent = msg;
+                errorDiv.classList.add('show');
+                showThought(msg);
+            }
+        } catch (error) {
+            const msg = currentLang === 'en' ? 'Connection error. Please try again.' : 'Помилка з\'єднання. Спробуйте ще раз.';
+            errorDiv.textContent = msg;
+            errorDiv.classList.add('show');
+            showThought(msg);
+            console.error('Reset request error:', error);
+        }
+    });
+
+    document.getElementById('confirmResetContainer').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideThought();
+
+        const emailInput = document.getElementById('confirmEmail');
+        const codeInput = document.getElementById('resetCode');
+        const newPassInput = document.getElementById('resetNewPassword');
+        const confirmPassInput = document.getElementById('resetConfirmPassword');
+
+        const emailError = document.getElementById('confirmEmailError');
+        const codeError = document.getElementById('resetCodeError');
+        const newPassError = document.getElementById('resetNewPasswordError');
+        const confirmPassError = document.getElementById('resetConfirmPasswordError');
+
+        emailError.classList.remove('show');
+        codeError.classList.remove('show');
+        newPassError.classList.remove('show');
+        confirmPassError.classList.remove('show');
+
+        const email = emailInput.value.trim() || resetEmailGlobal;
+        const code = codeInput.value.trim();
+        const newPassword = newPassInput.value;
+        const confirmPassword = confirmPassInput.value;
+
+        if (!email) {
+            const msg = currentLang === 'en' ? 'Please enter your email.' : 'Будь ласка, введіть ваш email.';
+            emailError.textContent = msg;
+            emailError.classList.add('show');
+            showThought(msg);
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            emailError.textContent = translations[currentLang].errorEmail;
+            emailError.classList.add('show');
+            showThought(translations[currentLang].errorEmail);
+            return;
+        }
+
+        if (!code) {
+            const msg = currentLang === 'en' ? 'Please enter the reset code.' : 'Будь ласка, введіть код скидання.';
+            codeError.textContent = msg;
+            codeError.classList.add('show');
+            showThought(msg);
+            return;
+        }
+
+        if (!newPassword || newPassword.length < 8) {
+            const msg = currentLang === 'en' ? 'Password must be at least 8 characters!' : 'Пароль має містити щонайменше 8 символів!';
+            newPassError.textContent = msg;
+            newPassError.classList.add('show');
+            showThought(msg);
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            const msg = translations[currentLang].errorPasswordMatch;
+            confirmPassError.textContent = msg;
+            confirmPassError.classList.add('show');
+            showThought(msg);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/confirm-password-reset/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, code: code, new_password: newPassword })
+            });
+
+            let data = null;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                data = null;
+            }
+
+            if (response.ok) {
+                const msg = translations[currentLang].resetSuccess;
+                showThought(msg);
+
+                confirmResetContainer.classList.add('hidden');
+                signinContainer.classList.remove('hidden');
+                currentPage = 'signin';
+                changeLook('look-login');
+
+                signinEmail.value = email;
+                signinPassword.value = '';
+                codeInput.value = '';
+                newPassInput.value = '';
+                confirmPassInput.value = '';
+            } else {
+                const msg = data && data.error ? data.error : translations[currentLang].resetFailed;
+                showThought(msg);
+                codeError.textContent = msg;
+                codeError.classList.add('show');
+            }
+        } catch (error) {
+            const msg = currentLang === 'en' ? 'Connection error. Please try again.' : 'Помилка з\'єднання. Спробуйте ще раз.';
+            showThought(msg);
+            console.error('Confirm reset error:', error);
+        }
+    });
+
+    function autoVerifyFromUrl() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const uid = params.get('user_id') || params.get('uid');
+            const code = params.get('code') || params.get('token');
+
+            if (!uid || !code) return;
+
+            fetch(`${API_URL}/verify-email/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: uid, code: code })
+            })
+                .then(async (res) => {
+                    let data = null;
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        data = null;
+                    }
+                    return { ok: res.ok, data };
+                })
+                .then(({ ok, data }) => {
+                    if (ok) {
+                        const msg = translations[currentLang].emailVerifySuccess;
+                        showThought(msg);
+                        verifyEmailContainer.classList.add('hidden');
+                        signinContainer.classList.remove('hidden');
+                        currentPage = 'signin';
+                        changeLook('look-login');
+
+                        const emailFromResp = data && (data.email || (data.user && data.user.email));
+                        if (emailFromResp) {
+                            signinEmail.value = emailFromResp;
+                        }
+                    } else {
+                        const msg = (data && data.error) ? data.error : translations[currentLang].emailVerifyFailed;
+                        showThought(msg);
+                    }
+                })
+                .catch((e) => {
+                    const msg = currentLang === 'en'
+                        ? 'Email verification error. Please try again.'
+                        : 'Помилка підтвердження email. Спробуйте ще раз.';
+                    showThought(msg);
+                    console.error('Auto verify email error:', e);
+                });
+        } catch (e) {
+            console.error('URL parse error:', e);
+        }
+    }
+
+    changeLook('look-login');
+    autoVerifyFromUrl();
+</script>
+</body>
+</html>
