@@ -10,7 +10,6 @@ import requests
 import json
 from rest_framework.views import APIView
 
-from api.models import CryptoAsset
 from api.cmc.services import fetch_and_save_full
 from users.models import User, UserProfile, UserCryptoAsset
 from users.serializers import (
@@ -21,6 +20,7 @@ from users.serializers import (
     UserPortfolioUpdateSerializer,
     UserProfileSerializer,
 )
+from api.models import CryptoAsset
 
 
 def get_client_ip(request):
@@ -192,7 +192,10 @@ def logout(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def profile(request):
-    return Response(UserSerializer(request.user).data)
+    user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    data = UserSerializer(request.user).data
+    data["profile"] = UserProfileSerializer(user_profile).data
+    return Response(data)
 
 
 @api_view(['PATCH'])
@@ -305,6 +308,7 @@ class AddCryptoToPortfolioView(APIView):
     def post(self, request):
         user = request.user
         crypto_id = request.data.get("crypto")
+        symbol_raw = request.data.get("symbol")
         try:
             amount = Decimal(str(request.data.get("amount")))
         except (InvalidOperation, TypeError, ValueError):
@@ -313,10 +317,22 @@ class AddCryptoToPortfolioView(APIView):
         if amount <= 0:
             return Response({"error": "Amount must be greater than zero"}, status=400)
 
-        try:
-            crypto = CryptoAsset.objects.get(id=crypto_id)
-        except CryptoAsset.DoesNotExist:
-            return Response({"error": "Crypto not found"}, status=404)
+        crypto = None
+        if symbol_raw:
+            symbol = str(symbol_raw).upper().strip()
+            if not symbol:
+                return Response({"error": "Symbol is required"}, status=400)
+            crypto, _ = CryptoAsset.objects.get_or_create(
+                symbol=symbol,
+                defaults={"name": symbol},
+            )
+        elif crypto_id:
+            try:
+                crypto = CryptoAsset.objects.get(id=crypto_id)
+            except CryptoAsset.DoesNotExist:
+                return Response({"error": "Crypto not found"}, status=404)
+        else:
+            return Response({"error": "Provide symbol or crypto id"}, status=400)
 
         record, _ = UserCryptoAsset.objects.get_or_create(
             user=user,
@@ -334,6 +350,7 @@ class RemoveCryptoFromPortfolioView(APIView):
     def post(self, request):
         user = request.user
         crypto_id = request.data.get("crypto")
+        symbol_raw = request.data.get("symbol")
         try:
             amount = Decimal(str(request.data.get("amount")))
         except (InvalidOperation, TypeError, ValueError):
@@ -342,8 +359,19 @@ class RemoveCryptoFromPortfolioView(APIView):
         if amount <= 0:
             return Response({"error": "Amount must be greater than zero"}, status=400)
 
+        crypto_filter = {}
+        if symbol_raw:
+            symbol = str(symbol_raw).upper().strip()
+            if not symbol:
+                return Response({"error": "Symbol is required"}, status=400)
+            crypto_filter["crypto__symbol"] = symbol
+        elif crypto_id:
+            crypto_filter["crypto_id"] = crypto_id
+        else:
+            return Response({"error": "Provide symbol or crypto id"}, status=400)
+
         try:
-            record = UserCryptoAsset.objects.get(user=user, crypto_id=crypto_id)
+            record = UserCryptoAsset.objects.get(user=user, **crypto_filter)
         except UserCryptoAsset.DoesNotExist:
             return Response({"error": "Record not found"}, status=404)
 

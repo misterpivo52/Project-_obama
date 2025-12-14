@@ -46,11 +46,10 @@ def fetch_and_save_quote(symbol: str) -> CryptoPrice:
 def fetch_and_save_full(symbol: str) -> CryptoPrice:
     client = CMCClient()
     quote_payload = client.get_quote(symbol)
-    ohlcv_payload: Optional[Dict] = None
     try:
         ohlcv_payload = client.get_single_ohlcv(symbol)
-    except CMCError:
-        ohlcv_payload = None
+    except CMCError as exc:
+        raise CMCError(f"Failed to fetch OHLCV for {symbol}: {exc}") from exc
 
     normalized = normalize_quote_payload(symbol, quote_payload, ohlcv_payload)
     return save_cmc_data(symbol, normalized)

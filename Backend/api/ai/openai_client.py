@@ -5,7 +5,7 @@ from django.conf import settings
 
 
 class OpenAIError(Exception):
-
+    pass
 
 def _build_url() -> str:
     base = getattr(settings, "OPENAI_BASE_URL", "").strip() or "https://api.openai.com/v1"

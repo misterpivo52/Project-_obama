@@ -5,7 +5,7 @@ from django.conf import settings
 
 
 class GeminiError(Exception):
-
+    pass
 
 def _build_url(model: str) -> str:
     base = getattr(settings, "GEMINI_BASE_URL", "").strip() or "https://generativelanguage.googleapis.com/v1beta"
@@ -50,4 +50,3 @@ def call_gemini(prompt: str, model: Optional[str] = None, timeout: Optional[int]
             return text
 
     raise GeminiError("Gemini response missing text")
-
