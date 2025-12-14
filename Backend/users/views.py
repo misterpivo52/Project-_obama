@@ -2,11 +2,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from django.conf import settings
+from django.shortcuts import redirect
+from decimal import Decimal, InvalidOperation
 import requests
 import json
+from rest_framework.views import APIView
 
 from api.models import CryptoAsset
 from api.cmc.services import fetch_and_save_full
@@ -20,11 +22,13 @@ from users.serializers import (
     UserProfileSerializer,
 )
 
+
 def get_client_ip(request):
     x = request.META.get('HTTP_X_FORWARDED_FOR')
     if x:
         return x.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR')
+
 
 def send_email(to, subject, body):
     api = settings.SENDGRID_API_KEY
@@ -288,6 +292,7 @@ def confirm_password_reset(request):
 
     return Response({'message': 'Password reset successful'})
   
+
 class UserPortfolioView(APIView):
     def get(self, request):
         user = request.user
@@ -300,7 +305,13 @@ class AddCryptoToPortfolioView(APIView):
     def post(self, request):
         user = request.user
         crypto_id = request.data.get("crypto")
-        amount = float(request.data.get("amount", 0))
+        try:
+            amount = Decimal(str(request.data.get("amount")))
+        except (InvalidOperation, TypeError, ValueError):
+            return Response({"error": "Invalid amount"}, status=400)
+
+        if amount <= 0:
+            return Response({"error": "Amount must be greater than zero"}, status=400)
 
         try:
             crypto = CryptoAsset.objects.get(id=crypto_id)
@@ -313,29 +324,37 @@ class AddCryptoToPortfolioView(APIView):
             defaults={"amount": 0},
         )
 
-        record.amount += amount
-        record.save()
+        record.amount = (record.amount or Decimal("0")) + amount
+        record.save(update_fields=["amount"])
 
-        return Response({"status": "added", "amount": record.amount})
+        return Response({"status": "added", "amount": str(record.amount)})
 
 
 class RemoveCryptoFromPortfolioView(APIView):
     def post(self, request):
         user = request.user
         crypto_id = request.data.get("crypto")
-        amount = float(request.data.get("amount", 0))
+        try:
+            amount = Decimal(str(request.data.get("amount")))
+        except (InvalidOperation, TypeError, ValueError):
+            return Response({"error": "Invalid amount"}, status=400)
+
+        if amount <= 0:
+            return Response({"error": "Amount must be greater than zero"}, status=400)
 
         try:
             record = UserCryptoAsset.objects.get(user=user, crypto_id=crypto_id)
         except UserCryptoAsset.DoesNotExist:
             return Response({"error": "Record not found"}, status=404)
 
-        record.amount -= amount
-        if record.amount < 0:
-            record.amount = 0
-        record.save()
+        if amount >= record.amount:
+            record.delete()
+            return Response({"status": "removed", "amount": "0"})
 
-        return Response({"status": "removed", "amount": record.amount})
+        record.amount = record.amount - amount
+        record.save(update_fields=["amount"])
+
+        return Response({"status": "removed", "amount": str(record.amount)})
 
 
 class SetFavoriteCryptoView(APIView):

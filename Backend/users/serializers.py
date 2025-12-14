@@ -55,29 +55,22 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    favorite_crypto_symbol = serializers.CharField(
-        source="favorite_crypto.symbol",
-        read_only=True,
-    )
+    favorite_symbol = serializers.CharField(source='favorite_crypto.symbol', read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = ["favorite_crypto", "favorite_crypto_symbol"]
+        fields = ['favorite_crypto', 'favorite_symbol']
 
 
 class UserCryptoAssetSerializer(serializers.ModelSerializer):
-    crypto_symbol = serializers.CharField(source="crypto.symbol", read_only=True)
-    crypto_name = serializers.CharField(source="crypto.name", read_only=True)
+    crypto_symbol = serializers.CharField(source='crypto.symbol', read_only=True)
 
     class Meta:
         model = UserCryptoAsset
-        fields = ["id", "crypto", "crypto_symbol", "crypto_name", "amount"]
+        fields = ['id', 'crypto', 'crypto_symbol', 'amount']
+        read_only_fields = ['id']
 
 
-class UserPortfolioUpdateSerializer(serializers.ModelSerializer):
+class UserPortfolioUpdateSerializer(serializers.Serializer):
     crypto = serializers.IntegerField()
     amount = serializers.DecimalField(max_digits=20, decimal_places=8)
-
-    class Meta:
-        model = UserCryptoAsset
-        fields = ["crypto", "amount"]
