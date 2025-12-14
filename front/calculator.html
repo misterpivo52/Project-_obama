@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Calculator · CryptoTaro</title>
+  <link rel="stylesheet" href="assets/app.css"/>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="assets/i18n.js"></script>
+  <script src="assets/ui.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/layout.js"></script>
+
+  <script>
+    if(!AUTH.requireAuth()){}
+    mountLayout({pageTitle: I18N.t("calcTitle"), pageSubtitle: I18N.t("calcSubtitle")});
+    AUTH.syncProfilePill();
+  </script>
+
+  <script>
+  (function(){
+    const page = document.getElementById("page");
+    page.innerHTML = `
+      <div class="grid">
+        <div class="card col-12">
+          <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap">
+            <div style="min-width:220px">
+              <label data-i18n="symbol"></label>
+              <input class="input" id="calc_sym" placeholder="BTC" value="BTC"/>
+            </div>
+            <div style="min-width:220px">
+              <label data-i18n="amount"></label>
+              <input class="input" id="calc_amount" type="number" step="any" placeholder="1.5" value="1"/>
+            </div>
+            <div class="row" style="gap:8px">
+              <button class="btn primary" id="calc_run">⚡ <span data-i18n="runCalc"></span></button>
+            </div>
+          </div>
+          <div class="hr" style="margin:14px 0"></div>
+          <div class="muted" style="font-size:12px" data-i18n="calcHint"></div>
+        </div>
+
+        <div class="card col-12">
+          <h3 data-i18n="calcResult"></h3>
+          <div class="row" style="gap:12px; flex-wrap:wrap">
+            <div class="kpi-block">
+              <div class="kpi-label" data-i18n="calcPrice"></div>
+              <div class="kpi" id="calc_price">—</div>
+              <div class="kpi-sub muted" id="calc_time">—</div>
+            </div>
+            <div class="kpi-block">
+              <div class="kpi-label" data-i18n="amount"></div>
+              <div class="kpi" id="calc_amt">—</div>
+              <div class="kpi-sub muted" id="calc_sym_lbl">—</div>
+            </div>
+            <div class="kpi-block">
+              <div class="kpi-label" data-i18n="calcTotal"></div>
+              <div class="kpi" id="calc_total">—</div>
+              <div class="kpi-sub">USD</div>
+            </div>
+          </div>
+          <div class="hr" style="margin:14px 0"></div>
+          <div class="muted" id="calc_hint_text" data-i18n="calcEmpty"></div>
+        </div>
+      </div>
+    `;
+    I18N.apply();
+
+    const els = {
+      sym: document.getElementById("calc_sym"),
+      amount: document.getElementById("calc_amount"),
+      run: document.getElementById("calc_run"),
+      price: document.getElementById("calc_price"),
+      time: document.getElementById("calc_time"),
+      amt: document.getElementById("calc_amt"),
+      symLbl: document.getElementById("calc_sym_lbl"),
+      total: document.getElementById("calc_total"),
+      hint: document.getElementById("calc_hint_text"),
+    };
+
+    function normalizeSymbol(s){ return String(s || "").trim().toUpperCase(); }
+
+    function setLoading(v){
+      els.run.disabled = v;
+      els.run.textContent = v ? "…" : `⚡ ${I18N.t("runCalc")}`;
+    }
+
+    function renderResult(data){
+      els.price.textContent = UI.formatMoney(data.price);
+      els.total.textContent = UI.formatMoney(data.total_value);
+      els.amt.textContent = UI.formatNumber(data.amount);
+      els.symLbl.textContent = data.symbol || "—";
+      els.time.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : "—";
+      els.hint.textContent = "";
+    }
+
+    async function run(){
+      const symbol = normalizeSymbol(els.sym.value || "BTC");
+      const amount = els.amount.value;
+      if(!symbol || !amount){
+        els.hint.textContent = I18N.t("calcEmpty");
+        return;
+      }
+      setLoading(true);
+      try{
+        const res = await API.calcValue(symbol, amount);
+        renderResult(res);
+        UI.toast("CryptoTaro", `${symbol} × ${amount} → ${res.total_value}`);
+      }catch(err){
+        els.hint.textContent = err?.message || "Error";
+        UI.toast("CryptoTaro", err?.message || "Error");
+      }finally{
+        setLoading(false);
+      }
+    }
+
+    els.run.addEventListener("click", run);
+    els.amount.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
+    els.sym.addEventListener("keydown", e => { if(e.key === "Enter") run(); });
+  })();
+  </script>
+</body>
+</html>
