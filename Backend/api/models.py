@@ -39,5 +39,4 @@ class CryptoPrice(models.Model):
         ordering = ["-timestamp"]
 
     def __str__(self):
-        return f"{self.asset.symbol} — {self.price} USD @ {self.timestamp}"
-
+        return f"{self.asset.symbol} {self.price} USD @ {self.timestamp}"
