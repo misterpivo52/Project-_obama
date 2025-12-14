@@ -1533,7 +1533,7 @@
                     if (data && data.user) {
                         localStorage.setItem('user', JSON.stringify(data.user));
                     }
-                    window.location.href = 'index.html';
+                    window.location.href = 'dashboard.html';
                 }
             } else {
                 const rawError = data && (data.error || data.detail || JSON.stringify(data));
@@ -1735,7 +1735,7 @@
                 if (data && data.user) {
                     localStorage.setItem('user', JSON.stringify(data.user));
                 }
-                window.location.href = 'index.html';
+                window.location.href = 'dashboard.html';
             } else {
                 const errorMsg = data && data.error
                     ? data.error

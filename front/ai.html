@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>AI-аналіз • CryptoTaro</title>
+  <link rel="stylesheet" href="assets/app.css"/>
+  
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="assets/i18n.js"></script>
+  <script src="assets/ui.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/layout.js"></script>
+
+  <script>
+    if(!AUTH.requireAuth()){}
+    mountLayout({pageTitle: "AI-аналіз", pageSubtitle: "Короткий розбір монети через Gemini або OpenAI." });
+    AUTH.syncProfilePill();
+  </script>
+
+  
+<script>
+(function(){
+  const page = document.getElementById("page");
+  page.innerHTML = `
+    <div class="grid">
+      <div class="card col-12">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div class="row" style="gap:12px">
+            <div style="min-width:240px">
+              <label data-i18n="symbol"></label>
+              <input class="input" id="sym" placeholder="BTC" value="BTC"/>
+            </div>
+            <div style="min-width:220px">
+              <label data-i18n="provider"></label>
+              <select class="input" id="provider">
+                <option value="gemini" data-i18n="gemini"></option>
+                <option value="openai" data-i18n="openai"></option>
+              </select>
+            </div>
+            <div style="min-width:160px">
+              <label data-i18n="language"></label>
+              <select class="input" id="lang">
+                <option value="uk">uk</option>
+                <option value="en">en</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="run">✨ <span data-i18n="runAnalysis"></span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card col-12">
+        <h3 data-i18n="analysisResult"></h3>
+        <div class="muted" style="font-size:12px" id="meta">—</div>
+        <div class="hr"></div>
+        <div id="out" style="white-space:pre-wrap; line-height:1.6">—</div>
+      </div>
+    </div>
+  `;
+  I18N.apply();
+
+  const sym = document.getElementById("sym");
+  const provider = document.getElementById("provider");
+  const lang = document.getElementById("lang");
+  const out = document.getElementById("out");
+  const meta = document.getElementById("meta");
+
+  lang.value = I18N.getLang();
+
+  function normalizeSymbol(s){ return String(s||"").trim().toUpperCase(); }
+
+  async function run(){
+    const s = normalizeSymbol(sym.value || "BTC");
+    sym.value = s;
+    out.textContent = "…";
+    meta.textContent = "…";
+    try{
+      const l = lang.value || "uk";
+      const p = provider.value;
+      const res = p === "openai" ? await API.openaiCoin(s, l) : await API.aiCoin(s, l);
+      meta.textContent = `symbol: ${res.symbol} • fetched_now: ${res.fetched_now} • age: ${res.data_age_seconds}s • ${res.timestamp}`;
+      out.textContent = res.analysis || "—";
+    }catch(err){
+      out.textContent = "—";
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+    }
+  }
+
+  document.getElementById("run").onclick = run;
+  sym.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); run(); }});
+})();
+</script>
+
+</body>
+</html>

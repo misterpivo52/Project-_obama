@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Портфель • CryptoTaro</title>
+  <link rel="stylesheet" href="assets/app.css"/>
+  
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="assets/i18n.js"></script>
+  <script src="assets/ui.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/layout.js"></script>
+
+  <script>
+    if(!AUTH.requireAuth()){}
+    mountLayout({pageTitle: "Портфель", pageSubtitle: "Список позицій, оновлення вартості та AI-огляд." });
+    AUTH.syncProfilePill();
+  </script>
+
+  
+<script>
+(async function(){
+  const page = document.getElementById("page");
+  page.innerHTML = `
+    <div class="grid">
+      <div class="card col-12">
+        <div class="row" style="justify-content:space-between; align-items:flex-end">
+          <div class="row" style="gap:12px">
+            <div style="min-width:220px">
+              <label data-i18n="provider"></label>
+              <select class="input" id="provider">
+                <option value="gemini" data-i18n="gemini"></option>
+                <option value="openai" data-i18n="openai"></option>
+              </select>
+            </div>
+            <div style="min-width:160px">
+              <label data-i18n="language"></label>
+              <select class="input" id="lang">
+                <option value="uk">uk</option>
+                <option value="en">en</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn" id="btnAdd">＋ <span data-i18n="add"></span></button>
+            <button class="btn" id="btnRemove">－ <span data-i18n="remove"></span></button>
+            <button class="btn primary" id="btnRefresh">↻ <span data-i18n="refresh"></span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card col-4">
+        <h3 data-i18n="portfolioTotal"></h3>
+        <div class="kpi" id="total">—</div>
+        <div class="kpi-sub" id="latest">—</div>
+      </div>
+
+      <div class="card col-8">
+        <h3 data-i18n="holdings"></h3>
+        <div style="overflow:auto">
+          <table class="table" id="tbl">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th data-i18n="amount"></th>
+                <th>Price</th>
+                <th>Value</th>
+                <th>Weight</th>
+                <th>Δ24h</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="muted" style="font-size:12px; margin-top:10px" id="localHoldings">—</div>
+      </div>
+
+      <div class="card col-12">
+        <h3 data-i18n="portfolioAnalysis"></h3>
+        <div class="muted" style="font-size:12px" id="meta">—</div>
+        <div class="hr"></div>
+        <div id="analysis" style="white-space:pre-wrap; line-height:1.6">—</div>
+      </div>
+    </div>
+  `;
+  I18N.apply();
+
+  const provider = document.getElementById("provider");
+  const lang = document.getElementById("lang");
+  const total = document.getElementById("total");
+  const latest = document.getElementById("latest");
+  const meta = document.getElementById("meta");
+  const analysis = document.getElementById("analysis");
+  const tbody = document.querySelector("#tbl tbody");
+  const localHoldings = document.getElementById("localHoldings");
+
+  lang.value = I18N.getLang();
+
+  function renderItems(items){
+    tbody.innerHTML = "";
+    (items || []).forEach(it => {
+      const pct = Number(it.percent_change_24h);
+      const badge = Number.isFinite(pct) ? `<span class="badge ${pct>=0?'up':'down'}">${UI.formatPct(pct)}</span>` : "—";
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><b>${it.symbol}</b></td>
+        <td>${UI.formatNumber(it.amount)}</td>
+        <td>${UI.formatMoney(it.price)}</td>
+        <td><b>${UI.formatMoney(it.value)}</b></td>
+        <td>${Number.isFinite(Number(it.weight_pct)) ? Number(it.weight_pct).toFixed(2)+'%' : '—'}</td>
+        <td>${badge}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function loadLocalPortfolio(){
+    try{
+      const list = await API.listUserPortfolio();
+      const text = (list || []).map(x => `${x.crypto_symbol || x.crypto}: ${UI.formatNumber(x.amount)}`).join(" • ");
+      localHoldings.textContent = text || "-";
+    }catch(err){
+      localHoldings.textContent = "-";
+    }
+  }
+
+  async function loadAI(){
+    total.textContent = "…";
+    analysis.textContent = "…";
+    meta.textContent = "…";
+    try{
+      const l = lang.value || "uk";
+      const p = provider.value;
+      const res = p === "openai" ? await API.openaiPortfolio(l) : await API.aiPortfolio(l);
+      total.textContent = UI.formatMoney(res.total_value);
+      latest.textContent = res.latest_timestamp ? new Date(res.latest_timestamp).toLocaleString() : "—";
+      meta.textContent = `refreshed_any: ${res.refreshed_any} • items: ${res.items?.length || 0}`;
+      analysis.textContent = res.analysis || "—";
+      renderItems(res.items || []);
+    }catch(err){
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+      total.textContent = "—";
+      analysis.textContent = "—";
+      meta.textContent = "—";
+      tbody.innerHTML = "";
+    }
+  }
+
+  function showAddRemove(mode){
+    const title = mode === "add" ? I18N.t("add") : I18N.t("remove");
+    UI.modal({
+      title: `${title}: ${I18N.t("holdings")}`,
+      bodyHtml: `
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap:12px">
+          <div>
+            <label>${I18N.t("symbol")}</label>
+            <input class="input" id="m_symbol" placeholder="BTC">
+            <div class="muted" style="font-size:12px; margin-top:6px">Приклад: BTC</div>
+          </div>
+          <div>
+            <label>${I18N.t("amount")}</label>
+            <input class="input" id="m_amount" placeholder="0.5">
+            <div class="muted" style="font-size:12px; margin-top:6px">Підтримує дробові значення.</div>
+          </div>
+        </div>
+      `,
+      okText: I18N.t("save"),
+      cancelText: I18N.t("cancel"),
+      onOk: async (backdrop) => {
+        const sym = backdrop.querySelector("#m_symbol").value.trim();
+        const amt = backdrop.querySelector("#m_amount").value.trim();
+        const amount = Number(amt);
+        if(!sym || !Number.isFinite(amount) || amount <= 0){
+          UI.toast("CryptoTaro", "Некоректні дані");
+          return false;
+        }
+        try{
+          if(mode === "add"){
+            const r = await API.addUserAsset(sym, amount);
+            UI.toast("CryptoTaro", `${sym}: added → amount=${r.amount}`);
+          }else{
+            const r = await API.removeUserAsset(sym, amount);
+            UI.toast("CryptoTaro", `${sym}: removed → amount=${r.amount}`);
+          }
+          await loadLocalPortfolio();
+          await loadAI();
+        }catch(err){
+          UI.toast(I18N.t("apiError"), err.message || String(err));
+          return false;
+        }
+      }
+    });
+  }
+
+  document.getElementById("btnRefresh").onclick = () => { loadLocalPortfolio(); loadAI(); };
+  document.getElementById("btnAdd").onclick = () => showAddRemove("add");
+  document.getElementById("btnRemove").onclick = () => showAddRemove("remove");
+
+  await loadLocalPortfolio();
+  await loadAI();
+})();
+</script>
+
+</body>
+</html>

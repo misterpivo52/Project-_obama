@@ -1,106 +1,169 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .profile-container {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-        }
-        h1 {
-            color: royalblue;
-            margin-bottom: 20px;
-        }
-        #userInfo {
-            text-align: left;
-            margin-bottom: 30px;
-            line-height: 1.8;
-            color: #333;
-        }
-        #logoutBtn {
-            border: none;
-            outline: none;
-            background-color: #ff4d4d;
-            padding: 12px 25px;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        #logoutBtn:hover {
-            background-color: #e60000;
-        }
-    </style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CryptoTaro — Дашборд</title>
+
+  <link rel="stylesheet" href="assets/app.css"/>
+  <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
 
-    <div class="profile-container">
-        <h1>Welcome to Your Profile</h1>
-        <div id="userInfo"></div>
-        <button id="logoutBtn">Logout</button>
+<div id="app"></div>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/layout.js"></script>
+
+<script>
+if (!AUTH.requireAuth()) {
+}
+
+mountLayout({
+  pageTitle: "Дашборд",
+  pageSubtitle: "Live-ціни, графік та швидкий аналіз"
+});
+AUTH.syncProfilePill();
+
+const page = document.getElementById("page");
+
+page.innerHTML = `
+  <div class="grid">
+
+    <div class="card col-12">
+      <div class="row" style="justify-content:space-between; align-items:flex-end">
+        <div class="row" style="gap:12px">
+          <div>
+            <label>Символ</label>
+            <input id="symbol" class="input" value="BTC"/>
+          </div>
+          <div>
+            <label>Тип графіка</label>
+            <select id="chartType" class="input">
+              <option value="candles">Свічки</option>
+              <option value="line">Лінія</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="loadBtn">Завантажити</button>
+          <button class="btn" id="pinBtn">📌 Закріпити</button>
+        </div>
+      </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const userInfoDiv = document.getElementById('userInfo');
-            const logoutBtn = document.getElementById('logoutBtn');
-            const API_URL = 'http://localhost:8000/auth';
+    <div class="card col-3">
+      <h3>Ціна</h3>
+      <div class="kpi" id="price">—</div>
+    </div>
 
-            const user = JSON.parse(localStorage.getItem('user'));
-            const accessToken = localStorage.getItem('access_token');
-            const refreshToken = localStorage.getItem('refresh_token');
+    <div class="card col-3">
+      <h3>Зміна 24г</h3>
+      <div class="kpi" id="change24">—</div>
+    </div>
 
-            if (!user || !accessToken) {
-                window.location.href = 'register.html';
-                return;
-            }
+    <div class="card col-3">
+      <h3>Обсяг 24г</h3>
+      <div class="kpi" id="volume">—</div>
+    </div>
 
-            // Display user information
-            userInfoDiv.innerHTML = `
-                <p><strong>Name:</strong> ${user.first_name} ${user.last_name}</p>
-                <p><strong>Email:</strong> ${user.email}</p>
-                <p><strong>Country:</strong> ${user.country}</p>
-                <p><strong>Phone:</strong> ${user.phone}</p>
-            `;
+    <div class="card col-3">
+      <h3>Market Cap</h3>
+      <div class="kpi" id="cap">—</div>
+    </div>
 
-            // Handle logout
-            logoutBtn.addEventListener('click', async () => {
-                try {
-                    await fetch(`${API_URL}/logout/`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ refresh_token: refreshToken })
-                    });
-                } catch (error) {
-                    console.error('Logout failed on server, but clearing client-side session.', error);
-                } finally {
-                    // Always clear local storage and redirect
-                    localStorage.clear();
-                    window.location.href = 'register.html';
-                }
-            });
+    <div class="card col-12" style="padding:0">
+      <div id="chart" style="height:420px"></div>
+    </div>
+
+  </div>
+`;
+
+const chart = LightweightCharts.createChart(
+  document.getElementById("chart"),
+  {
+    layout: { background: { color: "transparent" }, textColor: "#e8eefc" },
+    grid: {
+      vertLines: { color: "rgba(255,255,255,.06)" },
+      horzLines: { color: "rgba(255,255,255,.06)" }
+    }
+  }
+);
+
+let series = chart.addCandlestickSeries({
+  upColor: "#22c55e",
+  downColor: "#ef4444",
+  borderUpColor: "#22c55e",
+  borderDownColor: "#ef4444",
+  wickUpColor: "#22c55e",
+  wickDownColor: "#ef4444"
+});
+
+async function loadData() {
+  const symbol = document.getElementById("symbol").value.trim().toUpperCase();
+  const type = document.getElementById("chartType").value;
+
+  try {
+    const quote = await API.getQuote(symbol);
+
+    document.getElementById("price").textContent =
+      UI.formatMoney(quote.price);
+    document.getElementById("change24").textContent =
+      UI.formatPct(quote.percent_change_24h);
+    document.getElementById("volume").textContent =
+      UI.formatMoney(quote.volume_24h);
+    document.getElementById("cap").textContent =
+      UI.formatMoney(quote.market_cap);
+
+    const history = await API.getHistory(symbol, 100);
+
+    chart.removeSeries(series);
+    series = (type === "line")
+      ? chart.addLineSeries()
+      : chart.addCandlestickSeries({
+          upColor: "#22c55e",
+          downColor: "#ef4444",
+          borderUpColor: "#22c55e",
+          borderDownColor: "#ef4444",
+          wickUpColor: "#22c55e",
+          wickDownColor: "#ef4444"
         });
-    </script>
+
+    const data = history.map(h => {
+      const t = Math.floor(new Date(h.timestamp).getTime() / 1000);
+      return type === "line"
+        ? { time: t, value: h.price }
+        : {
+            time: t,
+            open: h.open_price,
+            high: h.high_price,
+            low: h.low_price,
+            close: h.close_price
+          };
+    });
+
+    series.setData(data);
+    chart.timeScale().fitContent();
+
+    UI.toast("CryptoTaro", `${symbol} оновлено`);
+  } catch (e) {
+    UI.toast("Помилка", e.message);
+  }
+}
+
+document.getElementById("loadBtn").onclick = loadData;
+document.getElementById("pinBtn").onclick = async () => {
+  const s = document.getElementById("symbol").value.trim().toUpperCase();
+  await API.pinDashboardSymbol(s);
+  UI.toast("CryptoTaro", `${s} закріплено`);
+};
+
+loadData();
+</script>
 
 </body>
 </html>
