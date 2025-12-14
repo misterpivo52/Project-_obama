@@ -155,5 +155,5 @@ CELERY_BEAT_SCHEDULE = {
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 
-BOT_URL = os.getenv("BOT_URL")
+BOT_URL = os.getenv("BOT_URL", "http://bot:5055")
 BACKEND_URL = os.getenv("BACKEND_URL")
