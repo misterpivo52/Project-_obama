@@ -13,6 +13,14 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 CMC_API_KEY = os.getenv("CMC_API_KEY")
 CMC_SYMBOLS = os.getenv("CMC_SYMBOLS").split(",")
 DEBUG = os.getenv("DEBUG", "False") == "True"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_TIMEOUT = int(os.getenv("GEMINI_TIMEOUT", "10"))
+GEMINI_BASE_URL = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_TIMEOUT = int(os.getenv("OPENAI_TIMEOUT", "10"))
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -149,4 +157,3 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 
 BOT_URL = os.getenv("BOT_URL")
 BACKEND_URL = os.getenv("BACKEND_URL")
-
