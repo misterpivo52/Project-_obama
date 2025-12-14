@@ -9,3 +9,5 @@ requests==2.32.3
 redis==5.0.8
 discord.py>=2.3.0
 Flask>=3.0.0
+pytest
+pytest-django
