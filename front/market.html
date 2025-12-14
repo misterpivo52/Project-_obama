@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ринок • CryptoTaro</title>
+  <link rel="stylesheet" href="assets/app.css"/>
+  
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="assets/i18n.js"></script>
+  <script src="assets/ui.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/layout.js"></script>
+
+  <script>
+    if(!AUTH.requireAuth()){}
+    mountLayout({pageTitle: "Ринок", pageSubtitle: "Пошук монет, швидкі метрики та pin на дашборд." });
+    AUTH.syncProfilePill();
+  </script>
+
+  
+<script>
+(function(){
+  const page = document.getElementById("page");
+  page.innerHTML = `
+    <div class="grid">
+      <div class="card col-12">
+        <div class="row" style="justify-content:space-between">
+          <div class="row" style="gap:12px">
+            <div style="min-width:240px">
+              <label data-i18n="symbol"></label>
+              <input class="input" id="sym" placeholder="BTC" value="BTC"/>
+            </div>
+            <div style="min-width:220px">
+              <label data-i18n="provider"></label>
+              <div class="row">
+                <span class="badge">CMC/Binance</span>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="btnLoad">⚡ <span data-i18n="load"></span></button>
+            <button class="btn" id="btnPin">📌 <span data-i18n="pin"></span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card col-6">
+        <h3>Snapshot</h3>
+        <div class="grid" style="grid-template-columns: repeat(2, 1fr); gap:12px">
+          <div>
+            <div class="muted" data-i18n="lastPrice"></div>
+            <div class="kpi" id="price">—</div>
+          </div>
+          <div>
+            <div class="muted" data-i18n="change24h"></div>
+            <div class="kpi" id="chg">—</div>
+          </div>
+          <div>
+            <div class="muted" data-i18n="volume24h"></div>
+            <div class="kpi" id="vol">—</div>
+          </div>
+          <div>
+            <div class="muted" data-i18n="marketCap"></div>
+            <div class="kpi" id="cap">—</div>
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="muted" style="font-size:12px" id="raw">—</div>
+      </div>
+
+      <div class="card col-6">
+        <h3>Швидкий перехід</h3>
+        <p class="muted" style="margin-top:0">Використовуй <kbd>Enter</kbd> у полі символу.</p>
+        <div class="row">
+          <a class="btn" id="goDash" href="dashboard.html">📊 Дашборд</a>
+          <a class="btn" id="goAI" href="ai.html">✨ AI-аналіз</a>
+          <a class="btn" id="goPort" href="portfolio.html">🧺 Портфель</a>
+        </div>
+      </div>
+    </div>
+  `;
+
+  I18N.apply();
+
+  const sym = document.getElementById("sym");
+  const price = document.getElementById("price");
+  const chg = document.getElementById("chg");
+  const vol = document.getElementById("vol");
+  const cap = document.getElementById("cap");
+  const raw = document.getElementById("raw");
+
+  function normalizeSymbol(s){ return String(s||"").trim().toUpperCase(); }
+
+  async function load(){
+    const s = normalizeSymbol(sym.value || "BTC");
+    sym.value = s;
+    try{
+      const q = await API.getQuote(s);
+      price.textContent = UI.formatMoney(q.price);
+      chg.textContent = UI.formatPct(q.percent_change_24h);
+      vol.textContent = UI.formatMoney(q.volume_24h);
+      cap.textContent = UI.formatMoney(q.market_cap);
+      raw.textContent = q.timestamp ? `timestamp: ${q.timestamp}` : "—";
+      const pct = Number(q.percent_change_24h);
+      chg.style.color = Number.isFinite(pct) ? (pct>=0 ? "#b8f7cd" : "#fecaca") : "";
+    }catch(err){
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+    }
+  }
+
+  document.getElementById("btnLoad").onclick = load;
+  document.getElementById("btnPin").onclick = async () => {
+    const s = normalizeSymbol(sym.value || "BTC");
+    try{
+      const res = await API.pinDashboardSymbol(s);
+      UI.toast("CryptoTaro", res?.message || `${s} pinned`);
+    }catch(err){
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+    }
+  };
+
+  sym.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); load(); }});
+  load();
+})();
+</script>
+
+</body>
+</html>
