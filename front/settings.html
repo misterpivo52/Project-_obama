@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Налаштування • CryptoTaro</title>
+  <link rel="stylesheet" href="assets/app.css"/>
+  
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="assets/i18n.js"></script>
+  <script src="assets/ui.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/layout.js"></script>
+
+  <script>
+    if(!AUTH.requireAuth()){}
+    mountLayout({pageTitle: "Налаштування", pageSubtitle: "Профіль, Discord, 2FA та базові параметри." });
+    AUTH.syncProfilePill();
+  </script>
+
+  
+<script>
+(async function(){
+  const page = document.getElementById("page");
+  page.innerHTML = `
+    <div class="grid">
+      <div class="card col-7">
+        <h3 data-i18n="profile"></h3>
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap:12px">
+          <div>
+            <label>Email</label>
+            <input class="input" id="email" disabled>
+          </div>
+          <div>
+            <label data-i18n="twofa"></label>
+            <input class="input" id="twofa" disabled>
+          </div>
+          <div>
+            <label>Імʼя</label>
+            <input class="input" id="first_name">
+          </div>
+          <div>
+            <label>Прізвище</label>
+            <input class="input" id="last_name">
+          </div>
+          <div>
+            <label>Country</label>
+            <input class="input" id="country" placeholder="UA">
+          </div>
+          <div>
+            <label>Phone</label>
+            <input class="input" id="phone" placeholder="+380...">
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px; justify-content:flex-end">
+          <button class="btn primary" id="save"><span data-i18n="updateProfile"></span></button>
+        </div>
+      </div>
+
+      <div class="card col-5">
+        <h3>Discord</h3>
+        <p class="muted" style="margin-top:0">2FA та коди можуть приходити через Discord, якщо акаунт привʼязаний.</p>
+        <div class="row" style="gap:10px">
+          <button class="btn" id="unlink"><span data-i18n="unlinkDiscord"></span></button>
+        </div>
+        <div class="hr"></div>
+        <div class="muted" style="font-size:12px" id="meta">—</div>
+      </div>
+    </div>
+  `;
+  I18N.apply();
+
+  const els = {
+    email: document.getElementById("email"),
+    twofa: document.getElementById("twofa"),
+    first_name: document.getElementById("first_name"),
+    last_name: document.getElementById("last_name"),
+    country: document.getElementById("country"),
+    phone: document.getElementById("phone"),
+    meta: document.getElementById("meta")
+  };
+
+  async function load(){
+    try{
+      const p = await API.profile();
+      API.setUser(p);
+      els.email.value = p.email || "";
+      els.twofa.value = (p.two_factor_enabled ? "ON" : "OFF") + (p.discord_id ? ` (discord_id: ${p.discord_id})` : "");
+      els.first_name.value = p.first_name || "";
+      els.last_name.value = p.last_name || "";
+      els.country.value = p.country || "";
+      els.phone.value = p.phone || "";
+      els.meta.textContent = `created_at: ${p.created_at} • updated_at: ${p.updated_at} • email_verified: ${p.email_verified}`;
+    }catch(err){
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+    }
+  }
+
+  document.getElementById("save").onclick = async () => {
+    try{
+      const patch = {
+        first_name: els.first_name.value.trim(),
+        last_name: els.last_name.value.trim(),
+        country: els.country.value.trim(),
+        phone: els.phone.value.trim()
+      };
+      const p = await API.updateProfile(patch);
+      API.setUser(p);
+      UI.toast("CryptoTaro", "Збережено");
+      await load();
+    }catch(err){
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+    }
+  };
+
+  document.getElementById("unlink").onclick = async () => {
+    try{
+      const r = await API.unlinkDiscord();
+      UI.toast("CryptoTaro", r.message || "OK");
+      await load();
+    }catch(err){
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+    }
+  };
+
+  await load();
+})();
+</script>
+
+</body>
+</html>

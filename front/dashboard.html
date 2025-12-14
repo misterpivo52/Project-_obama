@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Дашборд • CryptoTaro</title>
+  <link rel="stylesheet" href="assets/app.css"/>
+  
+<script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+  function loadTradingViewScript(cb){
+    if(window.TradingView){
+      cb();
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = "https://s3.tradingview.com/tv.js";
+    s.onload = cb;
+    s.onerror = () => console.error("Failed to load TradingView script");
+    document.head.appendChild(s);
+  }
+</script>
+
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="assets/i18n.js"></script>
+  <script src="assets/ui.js"></script>
+  <script src="assets/api.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/layout.js"></script>
+
+  <script>
+    if(!AUTH.requireAuth()){}
+    mountLayout({pageTitle: "Дашборд", pageSubtitle: "Ціни, графік, live оновлення та швидкі дії." });
+    AUTH.syncProfilePill();
+  </script>
+
+  
+<script>
+(function(){
+  const page = document.getElementById("page");
+  page.innerHTML = `
+    <div class="grid">
+      <div class="card col-12">
+        <div class="row" style="justify-content:space-between">
+          <div class="row" style="gap:12px; align-items:flex-end">
+            <div style="min-width:220px">
+              <label data-i18n="symbol"></label>
+              <input class="input" id="sym" placeholder="BTC" value="BTC"/>
+              <div class="kpi-sub" style="margin-top:8px" data-i18n="tipPin"></div>
+            </div>
+
+            <div style="min-width:190px">
+              <label data-i18n="historyLimit"></label>
+              <input class="input" id="limit" value="100" readonly>
+            </div>
+
+            <div class="row" style="gap:8px">
+              <button class="btn primary" id="btnLoad">⚡ <span data-i18n="load"></span></button>
+              <button class="btn" id="btnPin">📌 <span data-i18n="pin"></span></button>
+              <button class="btn" id="btnRefresh">↻ <span data-i18n="refresh"></span></button>
+            </div>
+          </div>
+
+          <span class="badge" id="wsBadge">—</span>
+        </div>
+
+        <div id="pinnedRow" class="row" style="margin-top:12px; gap:8px; flex-wrap:wrap"></div>
+      </div>
+
+      <div class="card col-3">
+        <h3 data-i18n="lastPrice"></h3>
+        <div class="kpi" id="kPrice">—</div>
+        <div class="kpi-sub" id="kTime">—</div>
+      </div>
+      <div class="card col-3">
+        <h3 data-i18n="change24h"></h3>
+        <div class="kpi" id="kChg">—</div>
+        <div class="kpi-sub muted">%</div>
+      </div>
+      <div class="card col-3">
+        <h3 data-i18n="volume24h"></h3>
+        <div class="kpi" id="kVol">—</div>
+        <div class="kpi-sub">USD</div>
+      </div>
+      <div class="card col-3">
+        <h3 data-i18n="marketCap"></h3>
+        <div class="kpi" id="kCap">—</div>
+        <div class="kpi-sub">USD</div>
+      </div>
+
+      <div class="card col-12" style="padding:0; overflow:hidden">
+        <div style="padding:14px 14px 0 14px; display:flex; justify-content:space-between; align-items:center">
+          <div class="row">
+            <span class="badge" id="badgeSym">BTC</span>
+            <span class="badge" id="badgeDom">—</span>
+          </div>
+          <span class="muted" style="font-size:12px" id="hintCORS"></span>
+        </div>
+        <div id="chart" style="height:420px"></div>
+      </div>
+    </div>
+  `;
+
+  I18N.apply();
+
+  const els = {
+    sym: document.getElementById("sym"),
+    limit: document.getElementById("limit"),
+    btnLoad: document.getElementById("btnLoad"),
+    btnPin: document.getElementById("btnPin"),
+    btnRefresh: document.getElementById("btnRefresh"),
+    wsBadge: document.getElementById("wsBadge"),
+    pinnedRow: document.getElementById("pinnedRow"),
+    badgeSym: document.getElementById("badgeSym"),
+    badgeDom: document.getElementById("badgeDom"),
+    kPrice: document.getElementById("kPrice"),
+    kTime: document.getElementById("kTime"),
+    kChg: document.getElementById("kChg"),
+    kVol: document.getElementById("kVol"),
+    kCap: document.getElementById("kCap"),
+    hintCORS: document.getElementById("hintCORS"),
+  };
+
+  els.hintCORS.textContent = I18N.t("noteCORS");
+
+  let ws = null;
+  let tvWidget = null;
+
+  function destroyWS(){
+    try{ if(ws) ws.close(); }catch{}
+    ws = null;
+  }
+
+  function setWSBadge(ok, msg){
+    els.wsBadge.textContent = msg;
+    els.wsBadge.className = "badge " + (ok ? "up" : "down");
+  }
+
+  function normalizeSymbol(s){
+    return String(s||"").trim().toUpperCase();
+  }
+
+  function renderTradingView(sym){
+    const container = document.getElementById("chart");
+    container.innerHTML = "";
+    const tradingSymbol = sym.includes(":") ? sym : `BINANCE:${sym}USDT`;
+    tvWidget = new TradingView.widget({
+      container_id: "chart",
+      symbol: tradingSymbol,
+      interval: "60",
+      timezone: "Etc/UTC",
+      theme: "dark",
+      style: "1",
+      hide_side_toolbar: false,
+      hide_top_toolbar: false,
+      allow_symbol_change: true,
+      autosize: true,
+    });
+  }
+
+  async function loadPinned(){
+    if(!els.pinnedRow) return;
+    els.pinnedRow.innerHTML = `<span class="muted">${I18N.t("loading") || "Loading..."}</span>`;
+    try{
+      const prof = await API.profile();
+      const sym = prof?.profile?.favorite_symbol;
+      if(!sym){
+        els.pinnedRow.innerHTML = `<span class="muted">${I18N.t("tipPin") || "Pin a symbol to show here"}</span>`;
+        return;
+      }
+      const quote = await API.getQuote(sym);
+      const price = UI.formatMoney(quote?.price);
+      els.pinnedRow.innerHTML = "";
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = `${sym} · ${price}`;
+      btn.onclick = () => {
+        els.sym.value = sym;
+        loadAll(true);
+      };
+      els.pinnedRow.appendChild(btn);
+    }catch(err){
+      els.pinnedRow.innerHTML = `<span class="muted">${err.message || "N/A"}</span>`;
+    }
+  }
+
+  function renderKPIs(q){
+    els.kPrice.textContent = UI.formatMoney(q?.price);
+    els.kChg.textContent = UI.formatPct(q?.percent_change_24h);
+    els.kVol.textContent = UI.formatMoney(q?.volume_24h);
+    els.kCap.textContent = UI.formatMoney(q?.market_cap);
+    els.kTime.textContent = q?.timestamp ? new Date(q.timestamp).toLocaleString() : "—";
+
+    const dom = q?.market_dominance;
+    els.badgeDom.textContent = Number.isFinite(Number(dom)) ? `Dom: ${Number(dom).toFixed(2)}%` : "Dom: —";
+
+    const pct = Number(q?.percent_change_24h);
+    els.kChg.style.color = Number.isFinite(pct) ? (pct>=0 ? "#b8f7cd" : "#fecaca") : "";
+  }
+
+  async function loadAll(force=false){
+    const sym = normalizeSymbol(els.sym.value || "BTC");
+    els.sym.value = sym;
+    els.badgeSym.textContent = sym;
+
+    try{
+      const q = await API.getQuote(sym);
+      renderKPIs(q);
+
+      loadTradingViewScript(() => renderTradingView(sym));
+
+      setupWS(sym);
+
+      UI.toast("CryptoTaro", `${sym}: OK`);
+    }catch(err){
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+      setWSBadge(false, I18N.t("wsNotAvailable"));
+      destroyWS();
+    }
+  }
+
+  function setupWS(sym){
+    destroyWS();
+    const pair = sym.endsWith("USDT") ? sym : `${sym}USDT`;
+    const url = `wss://stream.binance.com:9443/ws/${pair.toLowerCase()}@kline_1m`;
+    try{
+      ws = new WebSocket(url);
+      setWSBadge(true, `${I18N.t("wsLive")}: ${pair}`);
+      ws.onmessage = (ev) => {
+        try{
+          const msg = JSON.parse(ev.data);
+          const k = msg?.k;
+          if(!k) return;
+          const t = Math.floor(k.t/1000);
+          const candle = {
+            time: t,
+            open: Number(k.o),
+            high: Number(k.h),
+            low: Number(k.l),
+            close: Number(k.c)
+          };
+
+          // update KPI price live
+          els.kPrice.textContent = UI.formatMoney(candle.close);
+          els.kTime.textContent = new Date(k.T).toLocaleString();
+        }catch{}
+      };
+      ws.onerror = () => setWSBadge(false, I18N.t("wsNotAvailable"));
+      ws.onclose = () => setWSBadge(false, I18N.t("wsNotAvailable"));
+    }catch{
+      setWSBadge(false, I18N.t("wsNotAvailable"));
+    }
+  }
+
+  els.btnLoad.onclick = () => loadAll(true);
+  els.btnRefresh.onclick = () => loadAll(true);
+  els.btnPin.onclick = async () => {
+    const sym = normalizeSymbol(els.sym.value || "BTC");
+    try{
+      const res = await API.pinDashboardSymbol(sym);
+      UI.toast("CryptoTaro", res?.message || `${sym} pinned`);
+      await loadPinned();
+    }catch(err){
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+    }
+  };
+
+  // initial
+  loadAll(false);
+  loadPinned();
+
+  window.onLanguageChanged = () => {
+    // update WS badge label
+    if(ws) setWSBadge(true, els.wsBadge.textContent.replace(/^(.*: )/, `${I18N.t("wsLive")}: `));
+  };
+})();
+</script>
+
+</body>
+</html>
