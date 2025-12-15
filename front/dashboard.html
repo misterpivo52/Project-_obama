@@ -80,12 +80,12 @@
         <div class="kpi" id="kChg">—</div>
         <div class="kpi-sub muted">%</div>
       </div>
-      <div class="card col-3">
+      <div class="card col-4">
         <h3 data-i18n="volume24h"></h3>
         <div class="kpi" id="kVol">—</div>
         <div class="kpi-sub">USD</div>
       </div>
-      <div class="card col-3">
+      <div class="card col-4">
         <h3 data-i18n="marketCap"></h3>
         <div class="kpi" id="kCap">—</div>
         <div class="kpi-sub">USD</div>
@@ -243,7 +243,6 @@
             close: Number(k.c)
           };
 
-          // update KPI price live
           els.kPrice.textContent = UI.formatMoney(candle.close);
           els.kTime.textContent = new Date(k.T).toLocaleString();
         }catch{}
@@ -268,12 +267,10 @@
     }
   };
 
-  // initial
   loadAll(false);
   loadPinned();
 
   window.onLanguageChanged = () => {
-    // update WS badge label
     if(ws) setWSBadge(true, els.wsBadge.textContent.replace(/^(.*: )/, `${I18N.t("wsLive")}: `));
   };
 })();
