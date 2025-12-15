@@ -6,6 +6,8 @@ const I18N = (() => {
       navDashboard: "Дашборд",
       navMarket: "Ринок",
       navAI: "AI-аналіз",
+      navAI: "AI-аналітика",
+      navCalculator: "Калькулятор",
       navPortfolio: "Портфель",
       navSettings: "Налаштування",
       navProfile: "Профіль",
@@ -51,14 +53,24 @@ const I18N = (() => {
       ok: "Гаразд",
       cancel: "Скасувати",
       wsLive: "Live (Binance WS)",
-      wsNotAvailable: "WS недоступний — використовую бекенд",
-      noteCORS: "Якщо в браузері CORS — відкрий фронт через локальний сервер."
+      wsNotAvailable: "WS недоступний — використовуємо бекенд",
+      noteCORS: "",
+      calcTitle: "Калькулятор",
+      calcSubtitle: "Швидкий розрахунок вартості",
+      runCalc: "Розрахувати",
+      calcResult: "Результат",
+      calcPrice: "Ціна",
+      calcTotal: "Вартість",
+      calcUpdated: "Оновлено",
+      calcHint: "Ціна з останнього запису або свіжого запиту.",
+      calcEmpty: "Введіть символ і кількість, щоб порахувати."
     },
     en: {
       appTag: "CryptoTaro • AI assistant",
       navDashboard: "Dashboard",
       navMarket: "Market",
       navAI: "AI Analysis",
+      navCalculator: "Calculator",
       navPortfolio: "Portfolio",
       navSettings: "Settings",
       navProfile: "Profile",
@@ -105,7 +117,16 @@ const I18N = (() => {
       cancel: "Cancel",
       wsLive: "Live (Binance WS)",
       wsNotAvailable: "WS unavailable — using backend",
-      noteCORS: "If you get CORS in the browser — serve front via a local server."
+      noteCORS: "",
+      calcTitle: "Calculator",
+      calcSubtitle: "Quick value calculator",
+      runCalc: "Calculate",
+      calcResult: "Result",
+      calcPrice: "Price",
+      calcTotal: "Total",
+      calcUpdated: "Updated",
+      calcHint: "Price uses last DB record or fresh fetch.",
+      calcEmpty: "Enter symbol and amount to calculate."
     }
   };
 

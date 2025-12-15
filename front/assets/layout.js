@@ -15,13 +15,14 @@ function mountLayout({pageTitle, pageSubtitle}){
             </div>
           </div>
           <nav class="nav">
-            <a href="dashboard.html" data-page="dashboard.html"><span>📊</span><span data-i18n="navDashboard"></span></a>
-            <a href="market.html" data-page="market.html"><span>🪙</span><span data-i18n="navMarket"></span></a>
-            <a href="ai.html" data-page="ai.html"><span>✨</span><span data-i18n="navAI"></span></a>
-            <a href="portfolio.html" data-page="portfolio.html"><span>🧺</span><span data-i18n="navPortfolio"></span></a>
+            <a href="dashboard.html" data-page="dashboard.html"><span>&#128200;</span><span data-i18n="navDashboard"></span></a>
+            <a href="market.html" data-page="market.html"><span>&#129689;</span><span data-i18n="navMarket"></span></a>
+            <a href="ai.html" data-page="ai.html"><span>&#10024;</span><span data-i18n="navAI"></span></a>
+            <a href="calculator.html" data-page="calculator.html"><span>&#8721;</span><span data-i18n="navCalculator"></span></a>
+            <a href="portfolio.html" data-page="portfolio.html"><span>&#128179;</span><span data-i18n="navPortfolio"></span></a>
             <div class="spacer"></div>
-            <a href="settings.html" data-page="settings.html"><span>⚙️</span><span data-i18n="navSettings"></span></a>
-            <a href="index.html"><span>👤</span><span data-i18n="navProfile"></span></a>
+            <a href="settings.html" data-page="settings.html"><span>&#9881;</span><span data-i18n="navSettings"></span></a>
+            <a href="index.html"><span>&#9786;</span><span data-i18n="navProfile"></span></a>
           </nav>
           <div class="sidebar-footer">
             <button class="btn" id="ct_lang_btn">🌐 <span id="ct_lang_lbl">UA</span></button>

@@ -1,8 +1,11 @@
-
 const API = (() => {
+  const overrideOrigin =
+    (typeof window !== "undefined" && (window.API_ORIGIN || localStorage.getItem("api_origin"))) ||
+    null;
+  const ORIGIN = overrideOrigin || "http://127.0.0.1:8000";
   const BASE = {
-    api: "http://localhost:8000/api",
-    auth: "http://localhost:8000/auth"
+    api: `${ORIGIN}/api`,
+    auth: `${ORIGIN}/auth`
   };
 
   function getTokens(){
@@ -88,6 +91,7 @@ const API = (() => {
   const openaiCoin = (symbol, lang="uk") => apiFetch(`${BASE.api}/openai/analysis/`, {method:"POST", body: JSON.stringify({symbol, lang})});
   const aiPortfolio = (lang="uk") => apiFetch(`${BASE.api}/ai/portfolio/?lang=${encodeURIComponent(lang)}`, {method:"GET"});
   const openaiPortfolio = (lang="uk") => apiFetch(`${BASE.api}/openai/portfolio/?lang=${encodeURIComponent(lang)}`, {method:"GET"});
+  const calcValue = (symbol, amount) => apiFetch(`${BASE.api}/calculator/`, {method:"POST", body: JSON.stringify({symbol, amount})});
 
   const profile = () => apiFetch(`${BASE.auth}/profile/`, {method:"GET"});
   const updateProfile = (patch) => apiFetch(`${BASE.auth}/profile/update/`, {method:"PATCH", body: JSON.stringify(patch)});
@@ -120,7 +124,7 @@ const API = (() => {
     getTokens, setTokens, getUser, setUser,
     apiFetch,
     getQuote, getHistory,
-    aiCoin, openaiCoin, aiPortfolio, openaiPortfolio,
+    aiCoin, openaiCoin, aiPortfolio, openaiPortfolio, calcValue,
     profile, updateProfile, unlinkDiscord, logout,
     listUserPortfolio, addUserAsset, removeUserAsset, pinDashboardSymbol
   };
