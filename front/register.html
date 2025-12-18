@@ -971,6 +971,7 @@
             errorPhoneCode: 'Phone number does not match selected country code',
             title2FA: 'Verify 2FA',
             message2FA: 'A verification code has been sent to your Discord. Please enter it below.',
+            message2FAGoogle: 'Enter the code from your Google Authenticator app.',
             '2faCode': 'Verification Code',
             verify: 'Verify',
             backToSignin: 'Back to Signin',
@@ -1042,6 +1043,7 @@
             errorPhoneCode: 'Номер телефону не відповідає вибраному коду країни',
             title2FA: 'Підтвердити 2FA',
             message2FA: 'Код підтвердження надіслано у ваш Discord. Будь ласка, введіть його нижче.',
+            message2FAGoogle: 'Введіть код із програми Google Authenticator.',
             '2faCode': 'Код підтвердження',
             verify: 'Підтвердити',
             backToSignin: 'Повернутися до входу',
@@ -1466,6 +1468,14 @@
                     resetPasswordContainer.classList.add('hidden');
                     confirmResetContainer.classList.add('hidden');
                     verifyEmailContainer.classList.add('hidden');
+
+                    const messageP = verify2faContainer.querySelector('.message');
+                    if(data.two_factor_method === 'google') {
+                        messageP.textContent = translations[currentLang].message2FAGoogle;
+                    } else {
+                        messageP.textContent = translations[currentLang].message2FA;
+                    }
+
                     document.getElementById('2faCode').focus();
                     changeLook('look-away');
                 } else {
