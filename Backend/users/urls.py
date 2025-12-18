@@ -17,6 +17,8 @@ urlpatterns = [
     path("portfolio/", views.UserPortfolioView.as_view()),
     path("portfolio/add/", views.AddCryptoToPortfolioView.as_view()),
     path("portfolio/remove/", views.RemoveCryptoFromPortfolioView.as_view()),
+    path("portfolio/swap/preview/", views.SwapPreviewView.as_view()),
+    path("portfolio/swap/", views.SwapPortfolioView.as_view()),
     path("favorite/", views.SetFavoriteCryptoView.as_view()),
     path("dashboard/symbol/", views.SetDashboardCryptoView.as_view()),
 ]

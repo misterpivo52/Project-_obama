@@ -18,6 +18,7 @@ from users.serializers import (
     UserProfileSerializer,
 )
 from api.models import CryptoAsset
+from users.swap_service import SwapError, SwapService
 
 
 def get_client_ip(request):
@@ -379,6 +380,44 @@ class RemoveCryptoFromPortfolioView(APIView):
         record.save(update_fields=["amount"])
 
         return Response({"status": "removed", "amount": str(record.amount)})
+
+
+class SwapPortfolioView(APIView):
+    service = SwapService()
+
+    def post(self, request):
+        user = request.user
+        from_symbol = str(request.data.get("from_symbol", "")).upper().strip()
+        to_symbol = str(request.data.get("to_symbol", "")).upper().strip()
+        try:
+            amount_in = Decimal(str(request.data.get("amount")))
+        except (InvalidOperation, TypeError, ValueError):
+            return Response({"error": "Invalid amount"}, status=400)
+
+        try:
+            result = self.service.execute(user, from_symbol, to_symbol, amount_in)
+        except SwapError as exc:
+            return Response({"error": str(exc)}, status=exc.status_code)
+        return Response(result)
+
+
+class SwapPreviewView(APIView):
+    service = SwapService()
+
+    def post(self, request):
+        user = request.user
+        from_symbol = str(request.data.get("from_symbol", "")).upper().strip()
+        to_symbol = str(request.data.get("to_symbol", "")).upper().strip()
+        try:
+            amount_in = Decimal(str(request.data.get("amount")))
+        except (InvalidOperation, TypeError, ValueError):
+            return Response({"error": "Invalid amount"}, status=400)
+
+        try:
+            result = self.service.preview(user, from_symbol, to_symbol, amount_in)
+        except SwapError as exc:
+            return Response({"error": str(exc)}, status=exc.status_code)
+        return Response(result)
 
 
 class SetFavoriteCryptoView(APIView):
