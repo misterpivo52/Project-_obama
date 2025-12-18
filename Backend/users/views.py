@@ -7,6 +7,11 @@ from django.conf import settings
 from decimal import Decimal, InvalidOperation
 import requests
 from rest_framework.views import APIView
+import qrcode
+import base64
+from io import BytesIO
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from django.contrib.auth import get_user_model
 
 from api.cmc.services import fetch_and_save_full
 from users.models import User, UserProfile, UserCryptoAsset
@@ -136,6 +141,10 @@ def login(request):
         return Response({"error": "Account disabled"}, status=status.HTTP_403_FORBIDDEN)
 
     if user.two_factor_enabled:
+        if user.two_factor_method == 'google':
+            return Response({"requires_2fa": True, "user_id": str(user.id), "two_factor_method": "google"},
+                            status=status.HTTP_200_OK)
+
         code = user.generate_verification_code()
         ip = get_client_ip(request)
         location = "Unknown"
@@ -150,7 +159,8 @@ def login(request):
             )
         except Exception:
             return Response({"error": "Discord bot offline"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response({"requires_2fa": True, "user_id": str(user.id)}, status=status.HTTP_200_OK)
+        return Response({"requires_2fa": True, "user_id": str(user.id), "two_factor_method": "discord"},
+                        status=status.HTTP_200_OK)
 
     send_email(
         user.email,
@@ -175,7 +185,11 @@ def verify_2fa(request):
     except Exception:
         return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    if not user.verify_code(code):
+    if user.two_factor_method == 'google':
+        device = user.totpdevice_set.first()
+        if not device or not device.verify_token(code):
+            return Response({"error": "Invalid or expired code"}, status=status.HTTP_400_BAD_REQUEST)
+    elif not user.verify_code(code):
         return Response({"error": "Invalid or expired code"}, status=status.HTTP_400_BAD_REQUEST)
 
     send_email(
@@ -455,3 +469,61 @@ class SetDashboardCryptoView(APIView):
         profile.save(update_fields=["favorite_crypto"])
 
         return Response({"symbol": symbol, "message": f"{symbol} pinned to dashboard"})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def enable_totp_and_generate_qr_code(request):
+    user = request.user
+    user.totpdevice_set.all().delete()
+
+    device = user.totpdevice_set.create(confirmed=False)
+
+    uri = device.config_url
+
+    img = qrcode.make(uri)
+    stream = BytesIO()
+    img.save(stream, "PNG")
+
+    qr_code_base64 = base64.b64encode(stream.getvalue()).decode("utf-8")
+
+    return Response({'qr_code': f"data:image/png;base64,{qr_code_base64}"})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_totp_and_enable(request):
+    user = request.user
+    token = request.data.get('token')
+
+    if not token:
+        return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    device = user.totpdevice_set.filter(confirmed=False).first()
+
+    if not device:
+        return Response({'error': 'No TOTP device found to verify'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if device.verify_token(token):
+        device.confirmed = True
+        device.save()
+        user.two_factor_method = 'google'
+        user.two_factor_enabled = True
+        user.save()
+        return Response({'success': 'TOTP 2FA has been enabled'})
+
+    return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def disable_totp(request):
+    user = request.user
+    devices = user.totpdevice_set.all()
+    devices.delete()
+
+    user.two_factor_enabled = False
+    user.two_factor_method = None
+    user.save()
+
+    return Response({'success': 'TOTP 2FA has been disabled'})

@@ -22,7 +22,18 @@
     AUTH.syncProfilePill();
   </script>
 
-  
+  <div id="google-auth-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h3>Setup Google Authenticator</h3>
+      <div id="qr-code-container"></div>
+      <p>Scan the QR code with your authenticator app and enter the code below.</p>
+      <input type="text" id="totp-token" placeholder="6-digit code">
+      <button id="verify-totp-btn" class="btn primary">Verify and Enable</button>
+    </div>
+  </div>
+
+
 <script>
 (async function(){
   const page = document.getElementById("page");
@@ -70,6 +81,13 @@
         <div class="hr"></div>
         <div class="muted" style="font-size:12px" id="meta">—</div>
       </div>
+      <div class="card col-5">
+        <h3>Google Authenticator</h3>
+        <p class="muted" style="margin-top:0">Use Google Authenticator for 2FA.</p>
+        <div class="row" style="gap:10px">
+          <button class="btn" id="google-auth-btn"><span data-i18n="enableGoogleAuth">Enable</span></button>
+        </div>
+      </div>
     </div>
   `;
   I18N.apply();
@@ -95,6 +113,7 @@
       els.country.value = p.country || "";
       els.phone.value = p.phone || "";
       els.meta.textContent = `created_at: ${p.created_at} • updated_at: ${p.updated_at} • email_verified: ${p.email_verified}`;
+      updateGoogleAuthButton();
     }catch(err){
       UI.toast(I18N.t("apiError"), err.message || String(err));
     }
@@ -127,7 +146,74 @@
     }
   };
 
+  const googleAuthBtn = document.getElementById("google-auth-btn");
+  const googleAuthModal = document.getElementById("google-auth-modal");
+  const closeButton = googleAuthModal.querySelector(".close-button");
+  const qrCodeContainer = document.getElementById("qr-code-container");
+  const verifyTotpBtn = document.getElementById("verify-totp-btn");
+  const totpTokenInput = document.getElementById("totp-token");
+
+  async function updateGoogleAuthButton() {
+    const p = await API.profile();
+    if (p.two_factor_enabled && p.two_factor_method === 'google') {
+      googleAuthBtn.textContent = "Disable Google Authenticator";
+    } else {
+      googleAuthBtn.textContent = "Enable Google Authenticator";
+    }
+  }
+
+  googleAuthBtn.onclick = async () => {
+    const p = await API.profile();
+    if (p.two_factor_enabled && p.two_factor_method === 'google') {
+      try {
+        await API.postAuth('2fa/google/disable/', {});
+        UI.toast("CryptoTaro", "Google Authenticator disabled");
+        await load();
+        await updateGoogleAuthButton();
+      } catch (err) {
+        UI.toast(I18N.t("apiError"), err.message || String(err));
+      }
+    } else {
+      // Enable Google Authenticator
+      try {
+        const r = await API.getAuth('2fa/google/enable/');
+        qrCodeContainer.innerHTML = `<img src="${r.qr_code}" alt="QR Code">`;
+        googleAuthModal.style.display = "block";
+      } catch (err) {
+        UI.toast(I18N.t("apiError"), err.message || String(err));
+      }
+    }
+  };
+
+  closeButton.onclick = () => {
+    googleAuthModal.style.display = "none";
+  };
+
+  window.onclick = (event) => {
+    if (event.target == googleAuthModal) {
+      googleAuthModal.style.display = "none";
+    }
+  };
+
+  verifyTotpBtn.onclick = async () => {
+    const token = totpTokenInput.value.trim();
+    if (!token) {
+      UI.toast("CryptoTaro", "Please enter a token");
+      return;
+    }
+    try {
+      await API.postAuth('2fa/google/verify/', { token });
+      UI.toast("CryptoTaro", "Google Authenticator enabled successfully");
+      googleAuthModal.style.display = "none";
+      await load();
+      await updateGoogleAuthButton();
+    } catch (err) {
+      UI.toast(I18N.t("apiError"), err.message || String(err));
+    }
+  };
+
   await load();
+  await updateGoogleAuthButton();
 })();
 </script>
 

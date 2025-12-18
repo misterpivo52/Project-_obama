@@ -21,4 +21,7 @@ urlpatterns = [
     path("portfolio/swap/", views.SwapPortfolioView.as_view()),
     path("favorite/", views.SetFavoriteCryptoView.as_view()),
     path("dashboard/symbol/", views.SetDashboardCryptoView.as_view()),
+    path("2fa/google/enable/", views.enable_totp_and_generate_qr_code),
+    path("2fa/google/verify/", views.verify_totp_and_enable),
+    path("2fa/google/disable/", views.disable_totp),
 ]
