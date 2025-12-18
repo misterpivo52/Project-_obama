@@ -119,10 +119,35 @@ const API = (() => {
   };
   const pinDashboardSymbol = (symbol) => apiFetch(`${BASE.auth}/dashboard/symbol/`, {method:"POST", body: JSON.stringify({symbol})});
 
+  const getApi = (path, params) => {
+    const url = new URL(`${BASE.api}/${path}`);
+    if (params) {
+      Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+    }
+    return apiFetch(url.toString(), {method:"GET"});
+  };
+
+  const postApi = (path, body) => {
+    return apiFetch(`${BASE.api}/${path}`, {method:"POST", body: JSON.stringify(body)});
+  };
+
+  const getAuth = (path, params) => {
+    const url = new URL(`${BASE.auth}/${path}`);
+    if (params) {
+      Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+    }
+    return apiFetch(url.toString(), {method:"GET"});
+  };
+
+  const postAuth = (path, body) => {
+    return apiFetch(`${BASE.auth}/${path}`, {method:"POST", body: JSON.stringify(body)});
+  };
+
   return {
     BASE,
     getTokens, setTokens, getUser, setUser,
     apiFetch,
+    getApi, postApi, getAuth, postAuth,
     getQuote, getHistory,
     aiCoin, openaiCoin, aiPortfolio, openaiPortfolio, calcValue,
     profile, updateProfile, unlinkDiscord, logout,
